@@ -1,0 +1,42 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - Giao diện Dashboard
+*@
+@model QuanLyDeTaiDoAn.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var cards = new (string Nhan, int Gia, string Mau)[]
+    {
+        ("Tổng số lĩnh vực", Model.TongLinhVuc, "primary"),
+        ("Tổng số đề tài", Model.TongDeTai, "primary"),
+        ("Tổng số sinh viên", Model.TongSinhVien, "primary"),
+        ("Tổng số giảng viên", Model.TongGiangVien, "primary"),
+        ("Đăng ký chờ duyệt", Model.SoDangKyChoDuyet, "warning"),
+        ("Đăng ký đã duyệt", Model.SoDangKyDaDuyet, "success"),
+        ("Đề tài còn chỗ", Model.SoDeTaiConCho, "success"),
+        ("Đề tài đã đủ số lượng", Model.SoDeTaiDuSoLuong, "secondary"),
+        ("Sinh viên đang có GVHD", Model.SoSinhVienCoGVHD, "info"),
+        ("Giảng viên đạt giới hạn", Model.SoGiangVienDatGioiHan, "danger")
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Dashboard</h2>
+    <a asp-action="Index" class="btn btn-outline-primary">Xem thống kê chi tiết</a>
+</div>
+
+<div class="row g-3">
+    @foreach (var c in cards)
+    {
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card border-@c.Mau h-100">
+                <div class="card-body text-center">
+                    <div class="display-5 fw-bold text-@c.Mau">@c.Gia</div>
+                    <div class="text-muted">@c.Nhan</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
