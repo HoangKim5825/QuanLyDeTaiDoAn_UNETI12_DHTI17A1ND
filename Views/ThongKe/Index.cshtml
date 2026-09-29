@@ -1,0 +1,151 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - Giao diện Thống kê
+*@
+@model QuanLyDeTaiDoAn.ViewModels.ThongKeViewModel
+@{
+    ViewData["Title"] = "Thống kê";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Thống kê</h2>
+    <a asp-action="Dashboard" class="btn btn-outline-secondary">Về Dashboard</a>
+</div>
+
+@* Partial dạng local function để tái sử dụng cho các bảng "nhãn - số lượng" *@
+@functions {
+    public static string Rong() => "Chưa có dữ liệu.";
+}
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <h5>Số đề tài theo lĩnh vực</h5>
+        <table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Lĩnh vực</th><th class="text-end">Số đề tài</th></tr></thead>
+            <tbody>
+                @foreach (var x in Model.DeTaiTheoLinhVuc)
+                {
+                    <tr><td>@x.Nhan</td><td class="text-end">@x.SoLuong</td></tr>
+                }
+                @if (!Model.DeTaiTheoLinhVuc.Any()) { <tr><td colspan="2" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <h5>Số đăng ký theo trạng thái</h5>
+        <table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Trạng thái</th><th class="text-end">Số đăng ký</th></tr></thead>
+            <tbody>
+                @foreach (var x in Model.DangKyTheoTrangThai)
+                {
+                    <tr><td>@x.Nhan</td><td class="text-end">@x.SoLuong</td></tr>
+                }
+                @if (!Model.DangKyTheoTrangThai.Any()) { <tr><td colspan="2" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <h5>Số đăng ký theo tháng</h5>
+        <table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Tháng</th><th class="text-end">Số đăng ký</th></tr></thead>
+            <tbody>
+                @foreach (var x in Model.DangKyTheoThang)
+                {
+                    <tr><td>@x.Nhan</td><td class="text-end">@x.SoLuong</td></tr>
+                }
+                @if (!Model.DangKyTheoThang.Any()) { <tr><td colspan="2" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <h5>Số đề tài theo năm học / học kỳ</h5>
+        <table class="table table-sm table-bordered">
+            <thead class="table-light"><tr><th>Năm học - Học kỳ</th><th class="text-end">Số đề tài</th></tr></thead>
+            <tbody>
+                @foreach (var x in Model.DeTaiTheoNamHocHocKy)
+                {
+                    <tr><td>@x.Nhan</td><td class="text-end">@x.SoLuong</td></tr>
+                }
+                @if (!Model.DeTaiTheoNamHocHocKy.Any()) { <tr><td colspan="2" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-12">
+        <h5>Số sinh viên và số chỗ còn của từng đề tài</h5>
+        <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Đề tài</th><th>Lĩnh vực</th>
+                    <th class="text-end">Tối đa</th><th class="text-end">Đã duyệt</th><th class="text-end">Còn chỗ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model.DeTaiChoCon)
+                {
+                    <tr>
+                        <td>@x.TenDeTai</td>
+                        <td>@x.TenLinhVuc</td>
+                        <td class="text-end">@x.SoSinhVienToiDa</td>
+                        <td class="text-end">@x.SoDaDuyet</td>
+                        <td class="text-end @(x.SoChoCon <= 0 ? "text-danger fw-bold" : "")">@x.SoChoCon</td>
+                    </tr>
+                }
+                @if (!Model.DeTaiChoCon.Any()) { <tr><td colspan="5" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-12">
+        <h5>Giảng viên có số sinh viên hướng dẫn nhiều nhất</h5>
+        @if (Model.GiangVienNhieuNhat.Any())
+        {
+            <ul>
+                @foreach (var x in Model.GiangVienNhieuNhat)
+                {
+                    <li><strong>@x.HoTen</strong> (@x.TenLinhVuc) - @x.SoDangHuongDan sinh viên</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-muted">Chưa có giảng viên nào đang hướng dẫn.</p>
+        }
+    </div>
+
+    <div class="col-12">
+        <h5>Tải hướng dẫn và tỷ lệ sử dụng của từng giảng viên</h5>
+        <table class="table table-sm table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Giảng viên</th><th>Lĩnh vực</th>
+                    <th class="text-end">Đang hướng dẫn</th><th class="text-end">Tối đa</th><th style="width:220px">Tỷ lệ sử dụng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model.TaiGiangVien)
+                {
+                    var mau = x.TyLeSuDung >= 100 ? "bg-danger" : x.TyLeSuDung >= 75 ? "bg-warning" : "bg-success";
+                    <tr>
+                        <td>@x.HoTen</td>
+                        <td>@x.TenLinhVuc</td>
+                        <td class="text-end">@x.SoDangHuongDan</td>
+                        <td class="text-end">@x.SoToiDa</td>
+                        <td>
+                            <div class="progress" role="progressbar">
+                                <div class="progress-bar @mau" style="width:@(Math.Min(x.TyLeSuDung, 100).ToString(System.Globalization.CultureInfo.InvariantCulture))%">
+                                    @x.TyLeSuDung%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.TaiGiangVien.Any()) { <tr><td colspan="5" class="text-muted">@Rong()</td></tr> }
+            </tbody>
+        </table>
+    </div>
+</div>
