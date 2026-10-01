@@ -1,0 +1,72 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <điền MSSV của bạn>
+    Nội dung thực hiện: Module 4 - Partial form chọn giảng viên (dùng cho Phân công và Thay đổi GVHD)
+*@
+@model QuanLyDeTaiDoAn.ViewModels.PhanCongViewModel
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<input type="hidden" asp-for="MaDangKy" />
+@if (Model.LaThayDoi)
+{
+    <input type="hidden" asp-for="MaPhanCongCu" />
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Sinh viên</dt>
+    <dd class="col-sm-9">@Model.TenSinhVien</dd>
+    <dt class="col-sm-3">Đề tài</dt>
+    <dd class="col-sm-9">@Model.TenDeTai</dd>
+    <dt class="col-sm-3">Lĩnh vực</dt>
+    <dd class="col-sm-9">@Model.TenLinhVuc</dd>
+    @if (Model.LaThayDoi)
+    {
+        <dt class="col-sm-3">GVHD hiện tại</dt>
+        <dd class="col-sm-9">
+            <strong>@Model.TenGiangVienHienTai</strong>
+            @if (Model.NgayBatDauHienTai.HasValue)
+            {
+                <span class="text-muted">(từ @Model.NgayBatDauHienTai.Value.ToString("dd/MM/yyyy"))</span>
+            }
+        </dd>
+    }
+</dl>
+
+@if (!Model.GiangVienPhuHop.Any())
+{
+    <div class="alert alert-warning">
+        Hiện không có giảng viên nào phù hợp (đúng lĩnh vực, đang công tác và còn suất hướng dẫn).
+    </div>
+}
+else
+{
+    <div class="mb-3">
+        <label asp-for="MaGiangVien" class="form-label"></label>
+        <select asp-for="MaGiangVien" class="form-select">
+            <option value="">-- Chọn giảng viên --</option>
+            @foreach (var g in Model.GiangVienPhuHop)
+            {
+                <option value="@g.MaGiangVien" selected="@(Model.MaGiangVien == g.MaGiangVien)">
+                    @g.HoTen (đang hướng dẫn @g.SoDangHuongDan/@g.SoToiDa)
+                </option>
+            }
+        </select>
+        <span asp-validation-for="MaGiangVien" class="text-danger"></span>
+        <div class="form-text">Chỉ hiển thị giảng viên đúng lĩnh vực, đang công tác và còn suất hướng dẫn.</div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="GhiChu" class="form-label">
+            @(Model.LaThayDoi ? "Lý do thay đổi" : "Ghi chú")
+            @if (Model.LaThayDoi) { <span class="text-danger">*</span> }
+        </label>
+        <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="GhiChu" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        @(Model.LaThayDoi ? "Xác nhận thay đổi GVHD" : "Xác nhận phân công")
+    </button>
+}
+<a asp-action="DanhSachChoDuyet" asp-route-trangThai="DaDuyet" class="btn btn-secondary">Quay lại</a>
