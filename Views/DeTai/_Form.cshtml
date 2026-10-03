@@ -1,0 +1,58 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Các trường nhập liệu dùng chung cho Create/Edit đề tài (Module 2)
+    Lưu ý: KHÔNG có ô nhập số chỗ còn, vì SoChoCon được tính từ dữ liệu đăng ký.
+*@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model QuanLyDeTaiDoAn.Models.DeTai
+
+<div class="row g-3">
+    <div class="col-12">
+        <label asp-for="TenDeTai" class="form-label"></label>
+        <input asp-for="TenDeTai" class="form-control" />
+        <span asp-validation-for="TenDeTai" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label asp-for="MaLinhVuc" class="form-label"></label>
+        <select asp-for="MaLinhVuc" asp-items="(IEnumerable<SelectListItem>)ViewBag.LinhVucs" class="form-select"></select>
+        <span asp-validation-for="MaLinhVuc" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label asp-for="TrangThai" class="form-label"></label>
+        <select asp-for="TrangThai" asp-items="(IEnumerable<SelectListItem>)ViewBag.TrangThais" class="form-select"></select>
+        <span asp-validation-for="TrangThai" class="text-danger"></span>
+    </div>
+
+    <div class="col-6 col-md-4">
+        <label asp-for="NamHoc" class="form-label"></label>
+        <input asp-for="NamHoc" class="form-control" />
+        <span asp-validation-for="NamHoc" class="text-danger"></span>
+    </div>
+
+    <div class="col-6 col-md-4">
+        <label asp-for="HocKy" class="form-label"></label>
+        <select asp-for="HocKy" asp-items="(IEnumerable<SelectListItem>)ViewBag.HocKys" class="form-select"></select>
+        <span asp-validation-for="HocKy" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label asp-for="SoSinhVienToiDa" class="form-label"></label>
+        <input asp-for="SoSinhVienToiDa" class="form-control" min="1" />
+        <span asp-validation-for="SoSinhVienToiDa" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="MoTa" class="form-label"></label>
+        <textarea asp-for="MoTa" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="YeuCau" class="form-label"></label>
+        <textarea asp-for="YeuCau" class="form-control" rows="4"></textarea>
+        <span asp-validation-for="YeuCau" class="text-danger"></span>
+    </div>
+</div>

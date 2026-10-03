@@ -3146,24 +3146,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Admin\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\admin\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Nam4\\I\\ThTLNet\\BTL\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
+      "projectUniqueName": "D:\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
       "projectName": "QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND",
-      "projectPath": "D:\\Nam4\\I\\ThTLNet\\BTL\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
-      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "D:\\Nam4\\I\\ThTLNet\\BTL\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\obj\\",
+      "projectPath": "D:\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
+      "packagesPath": "C:\\Users\\admin\\.nuget\\packages\\",
+      "outputPath": "D:\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Users\\admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -3171,7 +3166,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "C:\\Users\\Admin\\.nuget\\packages": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
