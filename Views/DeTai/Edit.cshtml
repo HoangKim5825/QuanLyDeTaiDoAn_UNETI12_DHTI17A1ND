@@ -1,0 +1,36 @@
+@*
+    Họ và tên: <Nguyen Quang Huy>
+    Mã sinh viên: <23203100080>
+    Nội dung thực hiện: View sửa đề tài (Module 2)
+*@
+@model QuanLyDeTaiDoAn.Models.DeTai
+
+@{
+    ViewData["Title"] = "Sửa đề tài";
+    int soDaDuyet = ViewBag.SoDaDuyet is int n ? n : 0;
+}
+
+<h1 class="h3 mb-3">Sửa đề tài</h1>
+
+@if (soDaDuyet > 0)
+{
+    <div class="alert alert-info" role="status">
+        Đề tài này đang có <strong>@soDaDuyet</strong> đăng ký được duyệt, nên số sinh viên tối đa không được nhỏ hơn @soDaDuyet.
+    </div>
+}
+
+<form asp-action="Edit" asp-route-id="@Model.MaDeTai" method="post" class="card card-body">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="MaDeTai" />
+
+    <partial name="_Form" model="Model" />
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

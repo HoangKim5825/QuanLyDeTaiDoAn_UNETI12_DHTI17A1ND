@@ -1,0 +1,70 @@
+@*
+    Họ và tên: <Nguyen Quang Huy>
+    Mã sinh viên: <23203100080>
+    Nội dung thực hiện: View chi tiết đề tài, hiển thị số chỗ tính toán (Module 2)
+*@
+@using Microsoft.AspNetCore.Http
+@using QuanLyDeTaiDoAn.Constants
+@model QuanLyDeTaiDoAn.ViewModels.DeTaiDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.DeTai.TenDeTai;
+
+    // Chỉ để ẩn/hiện nút. Quyền thật sự được kiểm tra ở Controller.
+    // Nếu Session của M1 chưa có, tạm đặt: var laAdmin = true;
+    var laAdmin = Context.Session.GetString("VaiTro") == "Admin";
+
+    string badgeTrangThai = Model.TrangThaiHienThi switch
+    {
+        TrangThaiConst.DeTaiTT.MoDangKy => "text-bg-success",
+        TrangThaiConst.DeTaiTT.DuSoLuong => "text-bg-warning",
+        TrangThaiConst.DeTaiTT.TamKhoa => "text-bg-secondary",
+        _ => "text-bg-dark"
+    };
+    string badgeCho = Model.SoChoCon <= 0 ? "text-bg-danger" : Model.SoChoCon == 1 ? "text-bg-warning" : "text-bg-success";
+}
+
+<partial name="_ThongBao" />
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <h1 class="h3 mb-0">@Model.DeTai.TenDeTai</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+        @if (laAdmin)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.DeTai.MaDeTai" class="btn btn-primary">Sửa</a>
+        }
+    </div>
+</div>
+
+<div class="card card-body mb-3">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Lĩnh vực</dt>
+        <dd class="col-sm-9">@Model.DeTai.LinhVuc?.TenLinhVuc</dd>
+
+        <dt class="col-sm-3">Năm học / Học kỳ</dt>
+        <dd class="col-sm-9">@Model.DeTai.NamHoc / @Model.DeTai.HocKy</dd>
+
+        <dt class="col-sm-3">Trạng thái</dt>
+        <dd class="col-sm-9"><span class="badge @badgeTrangThai">@TrangThaiConst.DeTaiTT.Nhan(Model.TrangThaiHienThi)</span></dd>
+
+        <dt class="col-sm-3">Số sinh viên tối đa</dt>
+        <dd class="col-sm-9">@Model.DeTai.SoSinhVienToiDa</dd>
+
+        <dt class="col-sm-3">Đã được duyệt</dt>
+        <dd class="col-sm-9">@Model.SoDaDangKy</dd>
+
+        <dt class="col-sm-3">Số chỗ còn</dt>
+        <dd class="col-sm-9"><span class="badge @badgeCho">@(Model.SoChoCon <= 0 ? "Hết chỗ" : Model.SoChoCon.ToString())</span></dd>
+    </dl>
+</div>
+
+<div class="card card-body mb-3">
+    <h2 class="h5">Mô tả</h2>
+    <p class="mb-0" style="white-space: pre-line">@(string.IsNullOrWhiteSpace(Model.DeTai.MoTa) ? "Chưa có mô tả." : Model.DeTai.MoTa)</p>
+</div>
+
+<div class="card card-body">
+    <h2 class="h5">Yêu cầu</h2>
+    <p class="mb-0" style="white-space: pre-line">@(string.IsNullOrWhiteSpace(Model.DeTai.YeuCau) ? "Chưa có yêu cầu." : Model.DeTai.YeuCau)</p>
+</div>
