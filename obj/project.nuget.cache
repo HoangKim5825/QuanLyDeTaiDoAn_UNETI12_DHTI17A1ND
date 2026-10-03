@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "eMt5iD82a5s=",
+  "dgSpecHash": "/SlXSN0pr/o=",
   "success": true,
-  "projectFilePath": "D:\\Nam4\\I\\ThTLNet\\BTL\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
+  "projectFilePath": "D:\\Laptrinh\\net\\baitaplon\\QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Admin\\.nuget\\packages\\azure.core\\1.50.0\\azure.core.1.50.0.nupkg.sha512",
     "C:\\Users\\Admin\\.nuget\\packages\\azure.identity\\1.17.1\\azure.identity.1.17.1.nupkg.sha512",

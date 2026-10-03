@@ -1,0 +1,27 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View chi tiết lĩnh vực
+*@
+@model QuanLyDeTaiDoAn.Models.LinhVuc
+@{
+    ViewData["Title"] = "Chi tiết lĩnh vực";
+}
+
+<h3>Chi tiết lĩnh vực</h3>
+
+<dl class="row">
+    <dt class="col-sm-3">Tên lĩnh vực</dt>
+    <dd class="col-sm-9">@Model.TenLinhVuc</dd>
+
+    <dt class="col-sm-3">Mô tả</dt>
+    <dd class="col-sm-9">@Model.MoTa</dd>
+
+    <dt class="col-sm-3">Trạng thái</dt>
+    <dd class="col-sm-9">@(Model.TrangThai ? "Đang áp dụng" : "Ngừng áp dụng")</dd>
+
+    <dt class="col-sm-3">Đang được dùng bởi</dt>
+    <dd class="col-sm-9">@ViewBag.SoGiangVien giảng viên, @ViewBag.SoDeTai đề tài</dd>
+</dl>
+
+<a class="btn btn-secondary" asp-action="Index">Quay lại</a>

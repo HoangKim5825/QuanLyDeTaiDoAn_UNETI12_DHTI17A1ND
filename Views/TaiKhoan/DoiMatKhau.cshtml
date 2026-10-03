@@ -1,0 +1,36 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View đổi mật khẩu tài khoản
+*@
+@model QuanLyDeTaiDoAn.ViewModels.DoiMatKhauViewModel
+@{
+    ViewData["Title"] = "Đổi mật khẩu";
+}
+
+<h3>Đặt lại mật khẩu</h3>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="DoiMatKhau" method="post" class="col-md-5">
+    <input type="hidden" asp-for="MaTaiKhoan" />
+
+    <div class="mb-3">
+        <label asp-for="MatKhauMoi" class="form-label"></label>
+        <input asp-for="MatKhauMoi" class="form-control" type="password" />
+        <span asp-validation-for="MatKhauMoi" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="XacNhanMatKhau" class="form-label"></label>
+        <input asp-for="XacNhanMatKhau" class="form-control" type="password" />
+        <span asp-validation-for="XacNhanMatKhau" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a class="btn btn-secondary" asp-action="Index">Hủy</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

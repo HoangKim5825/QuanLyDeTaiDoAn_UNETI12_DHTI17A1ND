@@ -1,0 +1,30 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View chi tiết tài khoản
+*@
+@model QuanLyDeTaiDoAn.Models.TaiKhoan
+@{
+    ViewData["Title"] = "Chi tiết tài khoản";
+}
+
+<h3>Chi tiết tài khoản</h3>
+
+<dl class="row">
+    <dt class="col-sm-3">Tên đăng nhập</dt>
+    <dd class="col-sm-9">@Model.TenDangNhap</dd>
+
+    <dt class="col-sm-3">Họ và tên</dt>
+    <dd class="col-sm-9">@Model.HoTen</dd>
+
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.Email</dd>
+
+    <dt class="col-sm-3">Vai trò</dt>
+    <dd class="col-sm-9">@Model.VaiTro</dd>
+
+    <dt class="col-sm-3">Trạng thái</dt>
+    <dd class="col-sm-9">@(Model.TrangThai ? "Đang hoạt động" : "Đã khóa")</dd>
+</dl>
+
+<a class="btn btn-secondary" asp-action="Index">Quay lại</a>

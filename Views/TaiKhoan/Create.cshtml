@@ -1,0 +1,60 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View thêm tài khoản
+*@
+@model QuanLyDeTaiDoAn.ViewModels.TaiKhoanCreateViewModel
+@{
+    ViewData["Title"] = "Thêm tài khoản";
+}
+
+<h3>Thêm tài khoản mới</h3>
+<p class="text-muted small">Lưu ý: tạo ở đây chỉ tạo tài khoản đăng nhập. Hồ sơ Sinh viên/Giảng viên chi tiết do các Module khác quản lý.</p>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Create" method="post" class="col-md-6">
+    <div class="mb-3">
+        <label asp-for="TenDangNhap" class="form-label"></label>
+        <input asp-for="TenDangNhap" class="form-control" />
+        <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MatKhau" class="form-label"></label>
+        <input asp-for="MatKhau" class="form-control" type="password" />
+        <span asp-validation-for="MatKhau" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="HoTen" class="form-label"></label>
+        <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="VaiTro" class="form-label"></label>
+        <select asp-for="VaiTro" class="form-select">
+            <option value="Admin">Admin</option>
+            <option value="SinhVien">Sinh viên</option>
+        </select>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="TrangThai" class="form-check-input" />
+        <label asp-for="TrangThai" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a class="btn btn-secondary" asp-action="Index">Hủy</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
