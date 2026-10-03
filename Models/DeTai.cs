@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <232031000800>
 // Nội dung thực hiện: Bổ sung Display và thông báo lỗi tiếng Việt cho Entity DeTai (Module 2)
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;

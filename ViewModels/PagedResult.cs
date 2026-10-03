@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <23203100080>
 // Nội dung thực hiện: ViewModel phân trang và dòng danh sách đề tài (Module 2)
 using QuanLyDeTaiDoAn.Constants;
 

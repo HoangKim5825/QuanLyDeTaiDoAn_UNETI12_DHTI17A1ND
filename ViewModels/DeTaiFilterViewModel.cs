@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <23203100080>
 // Nội dung thực hiện: ViewModel tìm kiếm, lọc, sắp xếp, phân trang đề tài (Module 2)
 using Microsoft.AspNetCore.Mvc.Rendering;
 

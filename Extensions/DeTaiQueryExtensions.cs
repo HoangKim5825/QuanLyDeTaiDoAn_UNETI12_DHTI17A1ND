@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <23203100080>
 // Nội dung thực hiện: Công thức tính số chỗ còn dùng chung, sắp xếp, phân trang (Module 2)
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Constants;

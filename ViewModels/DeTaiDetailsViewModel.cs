@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <232031000800>
 // Nội dung thực hiện: ViewModel chi tiết đề tài kèm số chỗ tính toán (Module 2)
 using QuanLyDeTaiDoAn.Constants;
 using QuanLyDeTaiDoAn.Models;
