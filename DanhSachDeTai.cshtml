@@ -1,0 +1,60 @@
+@model List<DeTaiKhaDungViewModel>
+@{
+    ViewData["Title"] = "Đề tài đang mở đăng ký";
+}
+<h2>Đề tài đang mở đăng ký (@AppConstants.NamHocHienTai - Học kỳ @AppConstants.HocKyHienTai)</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input type="text" name="tuKhoa" value="@ViewBag.TuKhoa" class="form-control" placeholder="Tìm theo tên đề tài" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Tên đề tài</th>
+            <th>Lĩnh vực</th>
+            <th>Số SV tối đa</th>
+            <th>Số chỗ còn</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr><td colspan="5" class="text-center">Hiện không có đề tài nào đang mở đăng ký.</td></tr>
+        }
+        @foreach (var dt in Model)
+        {
+            <tr>
+                <td>@dt.TenDeTai</td>
+                <td>@dt.TenLinhVuc</td>
+                <td>@dt.SoSinhVienToiDa</td>
+                <td>
+                    @if (dt.SoChoCon > 0)
+                    {
+                        <span class="badge bg-success">Còn @dt.SoChoCon chỗ</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Hết chỗ</span>
+                    }
+                </td>
+                <td>
+                    @if (dt.SoChoCon > 0)
+                    {
+                        <a asp-action="DangKy" asp-route-id="@dt.MaDeTai" class="btn btn-sm btn-primary">Đăng ký</a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-primary" disabled>Đăng ký</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

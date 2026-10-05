@@ -1,0 +1,34 @@
+@model DeTai
+@{
+    ViewData["Title"] = "Đăng ký đề tài";
+}
+<h2>Đăng ký đề tài</h2>
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<dl class="row">
+    <dt class="col-sm-3">Tên đề tài</dt><dd class="col-sm-9">@Model.TenDeTai</dd>
+    <dt class="col-sm-3">Lĩnh vực</dt><dd class="col-sm-9">@Model.LinhVuc?.TenLinhVuc</dd>
+    <dt class="col-sm-3">Mô tả</dt><dd class="col-sm-9">@Model.MoTa</dd>
+    <dt class="col-sm-3">Yêu cầu</dt><dd class="col-sm-9">@Model.YeuCau</dd>
+    <dt class="col-sm-3">Số chỗ còn</dt>
+    <dd class="col-sm-9">
+        @if ((int)ViewBag.SoChoCon > 0)
+        {
+            <span class="badge bg-success">Còn @ViewBag.SoChoCon chỗ</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary">Hết chỗ</span>
+        }
+    </dd>
+</dl>
+
+<form asp-action="DangKy" asp-route-id="@Model.MaDeTai" method="post">
+    <div class="mb-3">
+        <label class="form-label">Lý do đăng ký</label>
+        <textarea name="lyDoDangKy" class="form-control" rows="4" placeholder="Vì sao bạn muốn đăng ký đề tài này?"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary" disabled="@((int)ViewBag.SoChoCon <= 0 ? "disabled" : null)">Gửi đăng ký</button>
+    <a asp-action="DanhSachDeTai" class="btn btn-secondary">Hủy</a>
+</form>
