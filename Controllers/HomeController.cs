@@ -1,19 +1,24 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.Models;
 
-namespace QuanLyDeTaiDoAn.Controllers
+namespace QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.Controllers;
+
+public class HomeController : Controller
 {
-    // Trang chủ - chỉ hiển thị thông tin chào mừng + điều hướng theo vai trò.
-    // Dashboard/Thống kê đầy đủ thuộc phạm vi Module 4.
-    public class HomeController : Controller
+    public IActionResult Index()
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
+        return View();
+    }
 
-        public IActionResult Error()
-        {
-            return View();
-        }
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

@@ -3,15 +3,10 @@ using QuanLyDeTaiDoAn.Models;
 
 namespace QuanLyDeTaiDoAn.Data
 {
-    // Ghi chú: DbContext là tài sản CHUNG của cả nhóm - cả 4 Module cùng dùng.
-    // Khi thêm/sửa Entity, cả nhóm cần thống nhất trước rồi mới tạo Migration mới
-    // (xem mục 10.1 đề bài) để tránh xung đột Migration giữa các thành viên.
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+            : base(options) { }
 
         public DbSet<TaiKhoan> TaiKhoans { get; set; }
         public DbSet<LinhVuc> LinhVucs { get; set; }
@@ -23,81 +18,56 @@ namespace QuanLyDeTaiDoAn.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
+            // Ràng buộc không trùng
+            modelBuilder.Entity<TaiKhoan>().HasIndex(t => t.TenDangNhap).IsUnique();
+            modelBuilder.Entity<LinhVuc>().HasIndex(l => l.TenLinhVuc).IsUnique();
+            modelBuilder.Entity<GiangVien>().HasIndex(g => g.Email).IsUnique();
+            modelBuilder.Entity<SinhVien>().HasIndex(s => s.Email).IsUnique();
 
-            // ================= TaiKhoan =================
-            modelBuilder.Entity<TaiKhoan>()
-                .HasIndex(t => t.TenDangNhap)
-                .IsUnique();
-
-            // Quan hệ 1-1: TaiKhoan <-> SinhVien
+            // TaiKhoan (1) - (1) SinhVien
             modelBuilder.Entity<SinhVien>()
-                .HasOne(sv => sv.TaiKhoan)
-                .WithOne(tk => tk.SinhVien)
-                .HasForeignKey<SinhVien>(sv => sv.MaTaiKhoan)
+                .HasOne(s => s.TaiKhoan)
+                .WithOne(t => t.SinhVien)
+                .HasForeignKey<SinhVien>(s => s.MaTaiKhoan);
+
+            // Tắt Cascade Delete cho các quan hệ có thể gây multiple cascade paths
+            modelBuilder.Entity<GiangVien>()
+                .HasOne(g => g.LinhVuc)
+                .WithMany(l => l.DanhSachGiangVien)
+                .HasForeignKey(g => g.MaLinhVuc)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<SinhVien>()
-                .HasIndex(sv => sv.MaTaiKhoan)
-                .IsUnique();
-
-            modelBuilder.Entity<SinhVien>()
-                .HasIndex(sv => sv.Email)
-                .IsUnique();
-
-            // ================= LinhVuc =================
-            modelBuilder.Entity<LinhVuc>()
-                .HasIndex(lv => lv.TenLinhVuc)
-                .IsUnique();
-
-            // ================= GiangVien =================
-            modelBuilder.Entity<GiangVien>()
-                .HasOne(gv => gv.LinhVuc)
-                .WithMany(lv => lv.GiangViens)
-                .HasForeignKey(gv => gv.MaLinhVuc)
-                .OnDelete(DeleteBehavior.Restrict); // Không cho xóa LinhVuc nếu còn GiangVien
-
-            modelBuilder.Entity<GiangVien>()
-                .HasIndex(gv => gv.Email)
-                .IsUnique();
-
-            // ================= DeTai =================
             modelBuilder.Entity<DeTai>()
-                .HasOne(dt => dt.LinhVuc)
-                .WithMany(lv => lv.DeTais)
-                .HasForeignKey(dt => dt.MaLinhVuc)
-                .OnDelete(DeleteBehavior.Restrict); // Không cho xóa LinhVuc nếu còn DeTai
+                .HasOne(d => d.LinhVuc)
+                .WithMany(l => l.DanhSachDeTai)
+                .HasForeignKey(d => d.MaLinhVuc)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // Tên đề tài không trùng trong phạm vi Năm học + Học kỳ
-            modelBuilder.Entity<DeTai>()
-                .HasIndex(dt => new { dt.TenDeTai, dt.NamHoc, dt.HocKy })
-                .IsUnique();
-
-            // ================= DangKyDeTai (Module 3) =================
             modelBuilder.Entity<DangKyDeTai>()
                 .HasOne(dk => dk.SinhVien)
-                .WithMany(sv => sv.DangKyDeTais)
+                .WithMany(sv => sv.DanhSachDangKy)
                 .HasForeignKey(dk => dk.MaSinhVien)
-                .OnDelete(DeleteBehavior.Restrict); // Không cho xóa SinhVien nếu còn DangKyDeTai
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<DangKyDeTai>()
                 .HasOne(dk => dk.DeTai)
-                .WithMany(dt => dt.DangKyDeTais)
+                .WithMany(dt => dt.DanhSachDangKy)
                 .HasForeignKey(dk => dk.MaDeTai)
-                .OnDelete(DeleteBehavior.Restrict); // Không cho xóa DeTai nếu còn DangKyDeTai
+                .OnDelete(DeleteBehavior.Restrict);
 
-            // ================= PhanCongHuongDan (Module 4) =================
             modelBuilder.Entity<PhanCongHuongDan>()
                 .HasOne(pc => pc.DangKyDeTai)
-                .WithMany(dk => dk.PhanCongHuongDans)
+                .WithMany(dk => dk.DanhSachPhanCong)
                 .HasForeignKey(pc => pc.MaDangKy)
-                .OnDelete(DeleteBehavior.Restrict); // Giữ lịch sử, không cho xóa DangKyDeTai
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<PhanCongHuongDan>()
                 .HasOne(pc => pc.GiangVien)
-                .WithMany(gv => gv.PhanCongHuongDans)
+                .WithMany(g => g.DanhSachPhanCong)
                 .HasForeignKey(pc => pc.MaGiangVien)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

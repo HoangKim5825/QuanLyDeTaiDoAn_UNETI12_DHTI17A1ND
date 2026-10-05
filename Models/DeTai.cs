@@ -1,61 +1,54 @@
+// Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <232031000800>
+// Nội dung thực hiện: Bổ sung Display và thông báo lỗi tiếng Việt cho Entity DeTai (Module 2)
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLyDeTaiDoAn.Models
 {
-    // Ghi chú: Entity này thuộc phạm vi phụ trách chính của Module 2
-    // (Quản lý đề tài - Tìm kiếm - Lọc - Sắp xếp - Phân trang).
-    // Module 3 đọc dữ liệu đề tài để sinh viên đăng ký (DangKyDeTaiController).
-    //
-    // QUAN TRỌNG: KHÔNG lưu "SoChoCon" thành cột trong bảng này.
-    // Số chỗ còn phải luôn được TÍNH bằng LINQ từ SoSinhVienToiDa trừ đi
-    // số DangKyDeTai đang ở trạng thái hợp lệ (xem AppConstants.DangKy_TrangThaiHopLeDeTinhCho
-    // và DangKyDeTaiController.TinhSoChoCon()).
     public class DeTai
     {
         [Key]
         public int MaDeTai { get; set; }
 
         [Required(ErrorMessage = "Tên đề tài không được để trống")]
-        [StringLength(200)]
+        [StringLength(250, ErrorMessage = "Tên đề tài tối đa 250 ký tự")]
         [Display(Name = "Tên đề tài")]
-        public string TenDeTai { get; set; }
+        public string TenDeTai { get; set; } = string.Empty;
 
-        [Required]
         [Display(Name = "Lĩnh vực")]
         public int MaLinhVuc { get; set; }
+        [ForeignKey("MaLinhVuc")]
+        public LinhVuc? LinhVuc { get; set; }
 
-        [ForeignKey(nameof(MaLinhVuc))]
-        public LinhVuc LinhVuc { get; set; }
-
-        [DataType(DataType.MultilineText)]
         [Display(Name = "Mô tả")]
-        public string MoTa { get; set; }
+        public string? MoTa { get; set; }
 
-        [DataType(DataType.MultilineText)]
         [Display(Name = "Yêu cầu")]
-        public string YeuCau { get; set; }
+        public string? YeuCau { get; set; }
 
-        [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "Số sinh viên tối đa phải > 0")]
-        [Display(Name = "Số SV tối đa")]
+        [Range(1, int.MaxValue, ErrorMessage = "Số sinh viên tối đa phải lớn hơn 0")]
+        [Display(Name = "Số sinh viên tối đa")]
         public int SoSinhVienToiDa { get; set; }
 
-        [Required]
-        [StringLength(20)]
         [Display(Name = "Năm học")]
-        public string NamHoc { get; set; } // vd "2025-2026"
+        public int NamHoc { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Vui lòng chọn học kỳ")]
         [StringLength(10)]
         [Display(Name = "Học kỳ")]
-        public string HocKy { get; set; } // vd "1", "2", "He"
+        public string HocKy { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(20)]
+        // "MoDangKy", "DuSoLuong", "TamKhoa", "KetThuc"
+        [Required(ErrorMessage = "Vui lòng chọn trạng thái")]
+        [StringLength(30)]
         [Display(Name = "Trạng thái")]
-        public string TrangThai { get; set; } // Mở đăng ký / Đủ số lượng / Tạm khóa / Kết thúc
+        public string TrangThai { get; set; } = "MoDangKy";
 
-        public ICollection<DangKyDeTai> DangKyDeTais { get; set; } = new List<DangKyDeTai>();
+        public ICollection<DangKyDeTai> DanhSachDangKy { get; set; } = new List<DangKyDeTai>();
+
+        // Thuộc tính KHÔNG map vào DB, chỉ tính toán khi truy vấn
+        [NotMapped]
+        public int SoChoCon { get; set; }
     }
 }

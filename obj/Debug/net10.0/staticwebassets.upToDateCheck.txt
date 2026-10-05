@@ -1,2 +1,0 @@
-wwwroot\css\site.css
-E:\QuanLyDeTaiDoAn_Module3_fixed (1)\QuanLyDeTaiDoAn\wwwroot\css\site.css
