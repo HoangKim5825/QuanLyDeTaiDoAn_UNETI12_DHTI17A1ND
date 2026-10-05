@@ -1,3 +1,7 @@
+// Họ và tên: (Điền họ tên của bạn)
+// Mã sinh viên: (Điền mã sinh viên của bạn)
+// Nội dung thực hiện: Module 3 - Entity SinhVien (Quản lý sinh viên)
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -5,36 +9,57 @@ namespace QuanLyDeTaiDoAn.Models
 {
     public class SinhVien
     {
+        // MaSinhVien là mã số sinh viên thực tế (vd "22103100001"),
+        // dùng luôn làm khóa chính -> không cần thêm cột Id phụ.
         [Key]
-        public int MaSinhVien { get; set; }
+        [Required(ErrorMessage = "Mã sinh viên không được để trống")]
+        [StringLength(20)]
+        [Display(Name = "Mã sinh viên")]
+        public string MaSinhVien { get; set; }
 
+        [Required]
+        [Display(Name = "Tài khoản")]
         public int MaTaiKhoan { get; set; }
-        [ForeignKey("MaTaiKhoan")]
-        public TaiKhoan? TaiKhoan { get; set; }
 
-        [Required, StringLength(100)]
-        public string HoTen { get; set; } = string.Empty;
+        [ForeignKey(nameof(MaTaiKhoan))]
+        public TaiKhoan TaiKhoan { get; set; }
+
+        [Required(ErrorMessage = "Họ tên không được để trống")]
+        [StringLength(100)]
+        [Display(Name = "Họ tên")]
+        public string HoTen { get; set; }
 
         [DataType(DataType.Date)]
-        public DateTime NgaySinh { get; set; }
+        [Display(Name = "Ngày sinh")]
+        public DateTime? NgaySinh { get; set; }
 
         [StringLength(20)]
-        public string? Lop { get; set; }
+        [Display(Name = "Lớp")]
+        public string Lop { get; set; }
 
         [StringLength(100)]
-        public string? Khoa { get; set; }
+        [Display(Name = "Khoa")]
+        public string Khoa { get; set; }
 
         [StringLength(100)]
-        public string? ChuyenNganh { get; set; }
+        [Display(Name = "Chuyên ngành")]
+        public string ChuyenNganh { get; set; }
 
-        [Required, EmailAddress, StringLength(100)]
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        [StringLength(100)]
+        public string Email { get; set; }
 
-        [Phone, StringLength(15)]
-        public string? SoDienThoai { get; set; }
+        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
+        [StringLength(15)]
+        [Display(Name = "Số điện thoại")]
+        public string SoDienThoai { get; set; }
 
-        public bool TrangThai { get; set; } = true;
+        [Required]
+        [StringLength(20)]
+        [Display(Name = "Trạng thái")]
+        public string TrangThai { get; set; } // "Đang học" / "Ngừng học"
 
-        public ICollection<DangKyDeTai> DanhSachDangKy { get; set; } = new List<DangKyDeTai>();
+        public ICollection<DangKyDeTai> DangKyDeTais { get; set; } = new List<DangKyDeTai>();
     }
 }
