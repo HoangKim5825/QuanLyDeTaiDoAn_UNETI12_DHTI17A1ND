@@ -1,0 +1,41 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View sửa lĩnh vực
+*@
+@model QuanLyDeTaiDoAn.Models.LinhVuc
+@{
+    ViewData["Title"] = "Sửa lĩnh vực";
+}
+
+<h3>Sửa lĩnh vực</h3>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Edit" method="post" class="col-md-6">
+    <input type="hidden" asp-for="MaLinhVuc" />
+
+    <div class="mb-3">
+        <label asp-for="TenLinhVuc" class="form-label"></label>
+        <input asp-for="TenLinhVuc" class="form-control" />
+        <span asp-validation-for="TenLinhVuc" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MoTa" class="form-label"></label>
+        <textarea asp-for="MoTa" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="MoTa" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="TrangThai" class="form-check-input" />
+        <label asp-for="TrangThai" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a class="btn btn-secondary" asp-action="Index">Hủy</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

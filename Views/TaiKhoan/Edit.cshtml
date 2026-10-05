@@ -1,0 +1,55 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View sửa tài khoản
+*@
+@model QuanLyDeTaiDoAn.ViewModels.TaiKhoanEditViewModel
+@{
+    ViewData["Title"] = "Sửa tài khoản";
+}
+
+<h3>Sửa thông tin tài khoản</h3>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Edit" method="post" class="col-md-6">
+    <input type="hidden" asp-for="MaTaiKhoan" />
+
+    <div class="mb-3">
+        <label asp-for="TenDangNhap" class="form-label"></label>
+        <input asp-for="TenDangNhap" class="form-control" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="HoTen" class="form-label"></label>
+        <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="VaiTro" class="form-label"></label>
+        <select asp-for="VaiTro" class="form-select">
+            <option value="Admin">Admin</option>
+            <option value="SinhVien">Sinh viên</option>
+        </select>
+        <div class="form-text">Không thể đổi sang vai trò khác nếu tài khoản đã có hồ sơ Sinh viên liên kết.</div>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="TrangThai" class="form-check-input" />
+        <label asp-for="TrangThai" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a class="btn btn-secondary" asp-action="Index">Hủy</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
