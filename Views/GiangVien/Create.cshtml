@@ -1,0 +1,27 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: View thêm giảng viên (Module 2)
+*@
+@model QuanLyDeTaiDoAn.Models.GiangVien
+
+@{
+    ViewData["Title"] = "Thêm giảng viên";
+}
+
+<h1 class="h3 mb-3">Thêm giảng viên</h1>
+
+<form asp-action="Create" method="post" class="card card-body">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <partial name="_Form" model="Model" />
+
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Lưu giảng viên</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

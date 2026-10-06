@@ -1,0 +1,58 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: View chi tiết giảng viên, hiển thị tải hướng dẫn tính toán (Module 2)
+*@
+@using QuanLyDeTaiDoAn.Constants
+@model QuanLyDeTaiDoAn.ViewModels.GiangVienDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.GiangVien.HoTen;
+    var gv = Model.GiangVien;
+    int conLai = gv.SoSinhVienHuongDanToiDa - Model.TaiHienTai;
+    string badgeTai = !Model.ConTai ? "text-bg-danger" : conLai == 1 ? "text-bg-warning" : "text-bg-success";
+    bool dangCongTac = gv.TrangThai == TrangThaiConst.GiangVienTT.DangCongTac;
+}
+
+<partial name="_ThongBao" />
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <h1 class="h3 mb-0">@gv.HoTen</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại danh sách</a>
+        <a asp-action="Edit" asp-route-id="@gv.MaGiangVien" class="btn btn-primary">Sửa</a>
+    </div>
+</div>
+
+<div class="card card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Học vị</dt>
+        <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(gv.HocVi) ? "Chưa cập nhật" : gv.HocVi)</dd>
+
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">@gv.Email</dd>
+
+        <dt class="col-sm-3">Số điện thoại</dt>
+        <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(gv.SoDienThoai) ? "Chưa cập nhật" : gv.SoDienThoai)</dd>
+
+        <dt class="col-sm-3">Lĩnh vực</dt>
+        <dd class="col-sm-9">@gv.LinhVuc?.TenLinhVuc</dd>
+
+        <dt class="col-sm-3">Trạng thái</dt>
+        <dd class="col-sm-9">
+            <span class="badge @(dangCongTac ? "text-bg-success" : "text-bg-secondary")">@TrangThaiConst.GiangVienTT.Nhan(gv.TrangThai)</span>
+        </dd>
+
+        <dt class="col-sm-3">Giới hạn hướng dẫn</dt>
+        <dd class="col-sm-9">@gv.SoSinhVienHuongDanToiDa sinh viên</dd>
+
+        <dt class="col-sm-3">Đang hướng dẫn</dt>
+        <dd class="col-sm-9">
+            <span class="badge @badgeTai">@Model.TaiHienTai/@gv.SoSinhVienHuongDanToiDa</span>
+            <span class="text-muted ms-2">@(Model.ConTai ? $"Còn {conLai} suất" : "Đã đạt giới hạn")</span>
+        </dd>
+
+        <dt class="col-sm-3">Tổng số phân công</dt>
+        <dd class="col-sm-9">@Model.TongPhanCong <span class="text-muted">(gồm cả lịch sử đã thay đổi hoặc kết thúc)</span></dd>
+    </dl>
+</div>
