@@ -24,6 +24,10 @@ namespace QuanLyDeTaiDoAn.Models
         [Required, StringLength(30)]
         public string TrangThai { get; set; } = "ChoDuyet";
 
+        // "ChuaBatDau", "DangThucHien", "HoanThanh" - chỉ Admin cập nhật
+        [Required, StringLength(30)]
+        public string TrangThaiThucHien { get; set; } = "ChuaBatDau";
+
         public string? GhiChuDuyet { get; set; }
 
         public ICollection<PhanCongHuongDan> DanhSachPhanCong { get; set; } = new List<PhanCongHuongDan>();

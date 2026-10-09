@@ -1,5 +1,5 @@
 // Họ và tên: Hoàng Kim
-// Mã sinh viên: <điền MSSV của bạn>
+// Mã sinh viên: <23203100056>
 // Nội dung thực hiện: Module 4 - Danh sách đăng ký chờ duyệt (tìm kiếm/lọc/phân trang),
 // duyệt và từ chối đăng ký, phân công giảng viên hướng dẫn, thay đổi GVHD (giữ lịch sử).
 
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Data;
+using QuanLyDeTaiDoAn.Filters;
 using QuanLyDeTaiDoAn.Helpers;
 using QuanLyDeTaiDoAn.Models;
 using QuanLyDeTaiDoAn.Services;
@@ -15,6 +16,7 @@ using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
+    [YeuCauAdmin]   
     public class PhanCongHuongDanController : Controller
     {
         private const int PageSize = 10;
@@ -26,17 +28,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         {
             _context = context;
             _nghiepVu = nghiepVu;
-        }
-
-        // Kiểm tra quyền Admin tại Controller (mục 5.3). Trả null nếu hợp lệ.
-        private IActionResult? KiemTraAdmin()
-        {
-            var vaiTro = HttpContext.Session.GetString("VaiTro");
-            if (string.IsNullOrEmpty(vaiTro))
-                return RedirectToAction("DangNhap", "TaiKhoan");   // đổi theo action Login của Module 1
-            if (vaiTro != "Admin")
-                return RedirectToAction("Index", "Home");
-            return null;
         }
 
         // Quay lại đúng trang danh sách (giữ nguyên từ khóa, bộ lọc, số trang)
@@ -55,8 +46,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         public async Task<IActionResult> DanhSachChoDuyet(
             string? tuKhoa, int? maLinhVuc, string trangThai = TrangThaiDangKy.ChoDuyet, int page = 1)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             var query = _context.DangKyDeTais.AsQueryable();
 
@@ -97,6 +86,7 @@ namespace QuanLyDeTaiDoAn.Controllers
                     TenLinhVuc = dk.DeTai.LinhVuc!.TenLinhVuc,
                     NgayDangKy = dk.NgayDangKy,
                     LyDoDangKy = dk.LyDoDangKy,
+                    TrangThaiThucHien = dk.TrangThaiThucHien,
                     TrangThai = dk.TrangThai,
                     GhiChuDuyet = dk.GhiChuDuyet,
                     SoChoCon = dk.DeTai.SoSinhVienToiDa
@@ -129,6 +119,61 @@ namespace QuanLyDeTaiDoAn.Controllers
             return View(vm);
         }
 
+        // CẬP NHẬT TIẾN ĐỘ (mục 8.6): chỉ tiến từng bước ChuaBatDau -> DangThucHien -> HoanThanh.
+        // Khi HoanThanh: đóng phân công đang hiệu lực (KetThuc + NgayKetThuc) để trả suất hướng dẫn,
+        // KHÔNG xóa gì nên lịch sử đăng ký/phân công được giữ nguyên.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CapNhatTienDo(int id, string tienDo, string? quayLai)
+        {
+            if (!TienDoThucHien.ThuTu.Contains(tienDo))
+            {
+                TempData["Loi"] = "Trạng thái thực hiện không hợp lệ.";
+                return QuayLai(quayLai);
+            }
+
+            await using var tx = await _context.Database.BeginTransactionAsync();
+
+            var dk = await _context.DangKyDeTais
+                .Include(x => x.DanhSachPhanCong)
+                .FirstOrDefaultAsync(x => x.MaDangKy == id);
+            if (dk == null) return NotFound();
+
+            if (dk.TrangThai != TrangThaiDangKy.DaDuyet)
+            {
+                TempData["Loi"] = "Chỉ đăng ký đã duyệt mới cập nhật được tiến độ.";
+                return QuayLai(quayLai);
+            }
+
+            int hienTai = Array.IndexOf(TienDoThucHien.ThuTu, dk.TrangThaiThucHien);
+            int moi = Array.IndexOf(TienDoThucHien.ThuTu, tienDo);
+            if (moi != hienTai + 1)
+            {
+                TempData["Loi"] = "Chỉ được chuyển tiến độ sang bước kế tiếp.";
+                return QuayLai(quayLai);
+            }
+
+            var pc = dk.DanhSachPhanCong.FirstOrDefault(p => p.TrangThai == TrangThaiPhanCong.DangHuongDan);
+            if (pc == null)
+            {
+                TempData["Loi"] = "Cần phân công giảng viên hướng dẫn trước khi cập nhật tiến độ.";
+                return QuayLai(quayLai);
+            }
+
+            if (tienDo == TienDoThucHien.HoanThanh)
+            {
+                pc.TrangThai = TrangThaiPhanCong.KetThuc;
+                pc.NgayKetThuc = DateTime.Now;
+            }
+
+            dk.TrangThaiThucHien = tienDo;
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            TempData["ThanhCong"] = $"Đã cập nhật tiến độ đăng ký #{id}.";
+            return QuayLai(quayLai);
+        }
+
         // ============================================================
         // DUYỆT ĐĂNG KÝ (POST)
         // Kiểm tra lại toàn bộ điều kiện tại thời điểm duyệt, trong transaction Serializable
@@ -138,8 +183,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Duyet(int id, string? quayLai)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
@@ -169,8 +212,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> TuChoi(int id, string? ghiChu, string? quayLai)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             if (string.IsNullOrWhiteSpace(ghiChu))
             {
@@ -237,8 +278,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [HttpGet]
         public async Task<IActionResult> PhanCong(int maDangKy)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             var dk = await _context.DangKyDeTais
                 .Where(x => x.MaDangKy == maDangKy)
@@ -248,7 +287,8 @@ namespace QuanLyDeTaiDoAn.Controllers
                     MaPhanCong = x.DanhSachPhanCong
                         .Where(p => p.TrangThai == TrangThaiPhanCong.DangHuongDan)
                         .Select(p => (int?)p.MaPhanCong)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+                    x.TrangThaiThucHien
                 })
                 .FirstOrDefaultAsync();
             if (dk == null) return NotFound();
@@ -277,8 +317,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PhanCong(PhanCongViewModel vm)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             if (!await NapThongTinAsync(vm)) return NotFound();
 
@@ -315,9 +353,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [HttpGet]
         public async Task<IActionResult> ThayDoiGVHD(int maPhanCong)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
-
             var pc = await _context.PhanCongHuongDans.FindAsync(maPhanCong);
             if (pc == null) return NotFound();
 
@@ -343,9 +378,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ThayDoiGVHD(PhanCongViewModel vm)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
-
             if (vm.MaPhanCongCu == null) return BadRequest();
             if (!await NapThongTinAsync(vm)) return NotFound();
 
@@ -398,8 +430,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [HttpGet]
         public async Task<IActionResult> LichSuPhanCong(int maDangKy)
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
 
             var vm = await _context.DangKyDeTais
                 .Where(dk => dk.MaDangKy == maDangKy)
