@@ -1,5 +1,5 @@
 // Họ và tên: Hoàng Kim
-// Mã sinh viên: <điền MSSV của bạn>
+// Mã sinh viên: <23203100056>
 // Nội dung thực hiện: Module 4 - ViewModel danh sách đăng ký chờ duyệt (tìm kiếm, lọc, phân trang)
 
 using System.ComponentModel.DataAnnotations;
@@ -18,6 +18,8 @@ namespace QuanLyDeTaiDoAn.ViewModels
         public string? LyDoDangKy { get; set; }
         public string TrangThai { get; set; } = string.Empty;
         public string? GhiChuDuyet { get; set; }
+
+        public string TrangThaiThucHien { get; set; } = string.Empty;
         public int SoChoCon { get; set; }   // tính lúc truy vấn, không lưu
 
         // Phân công đang hiệu lực (null nếu chưa có GVHD)

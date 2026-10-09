@@ -138,6 +138,10 @@ namespace QuanLyDeTaiDoAn.Services
             if (dk.TrangThai != TrangThaiDangKy.DaDuyet)
                 kq.Them("Chỉ đăng ký đã duyệt mới được phân công giảng viên.");
 
+            if (dk.TrangThaiThucHien == TienDoThucHien.HoanThanh)
+            {
+                kq.Them("Đề tài của đăng ký này đã hoàn thành, không thể phân công thêm.");
+            }
             // Sinh viên và đề tài vẫn hợp lệ
             if (dk.SinhVien == null || !dk.SinhVien.TrangThai)
                 kq.Them("Sinh viên không còn ở trạng thái hoạt động.");

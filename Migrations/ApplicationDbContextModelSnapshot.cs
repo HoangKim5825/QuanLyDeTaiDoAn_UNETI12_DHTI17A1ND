@@ -50,6 +50,11 @@ namespace QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<string>("TrangThaiThucHien")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.HasKey("MaDangKy");
 
                     b.HasIndex("MaDeTai");

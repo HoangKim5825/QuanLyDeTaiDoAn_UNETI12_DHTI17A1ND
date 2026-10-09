@@ -33,4 +33,11 @@ namespace QuanLyDeTaiDoAn.Helpers
         public const string TamKhoa = "TamKhoa";
         public const string KetThuc = "KetThuc";
     }
+    public static class TienDoThucHien
+    {
+        public const string ChuaBatDau = "ChuaBatDau";
+        public const string DangThucHien = "DangThucHien";
+        public const string HoanThanh = "HoanThanh";
+        public static readonly string[] ThuTu = { ChuaBatDau, DangThucHien, HoanThanh };
+    }
 }

@@ -1,6 +1,6 @@
 @*
     Họ và tên: Hoàng Kim
-    Mã sinh viên: <điền MSSV của bạn>
+    Mã sinh viên: <23203100056>
     Nội dung thực hiện: Module 4 - Giao diện danh sách đăng ký chờ duyệt (tìm kiếm, lọc, phân trang, duyệt/từ chối)
 *@
 @model QuanLyDeTaiDoAn.ViewModels.DanhSachChoDuyetViewModel
@@ -96,6 +96,20 @@ else
             <tbody>
                 @foreach (var x in Model.Items)
                 {
+                    var tienDo = x.TrangThaiThucHien;
+                    string nhanTienDo = tienDo switch
+                    {
+                        "DangThucHien" => "Đang thực hiện",
+                        "HoanThanh" => "Hoàn thành",
+                        _ => "Chưa bắt đầu"
+                    };
+                    string tienDoKe = tienDo switch
+                    {
+                        "ChuaBatDau" => "DangThucHien",
+                        "DangThucHien" => "HoanThanh",
+                        _ => ""
+                    };
+                    string nutKe = tienDo == "ChuaBatDau" ? "Bắt đầu thực hiện" : "Đánh dấu hoàn thành";
                     <tr>
                         <td>@x.MaDangKy</td>
                         <td>@x.TenSinhVien<br /><small class="text-muted">Mã SV: @x.MaSinhVien</small></td>
@@ -114,7 +128,11 @@ else
                             @if (x.TrangThai == "DaDuyet")
                             {
                                 <br />
-                                @if (x.TenGiangVienHienTai != null)
+                                @if (tienDo == "HoanThanh")
+                                {
+                                    <small class="text-success">Đã hoàn thành</small>
+                                }
+                                else if (x.TenGiangVienHienTai != null)
                                 {
                                     <small>GVHD: <strong>@x.TenGiangVienHienTai</strong></small>
                                 }
@@ -122,6 +140,7 @@ else
                                 {
                                     <small class="text-danger">Chưa có GVHD</small>
                                 }
+                                <br /><small>Tiến độ: <strong>@nhanTienDo</strong></small>
                             }
                             @if (!string.IsNullOrEmpty(x.GhiChuDuyet))
                             {
@@ -146,18 +165,33 @@ else
                             }
                             else if (x.TrangThai == "DaDuyet")
                             {
-                                @if (x.MaPhanCongHienTai == null)
+                                @if (tienDo != "HoanThanh")
                                 {
-                                    <a asp-action="PhanCong" asp-route-maDangKy="@x.MaDangKy"
-                                       class="btn btn-sm btn-primary">Phân công GVHD</a>
+                                    @if (x.MaPhanCongHienTai == null)
+                                    {
+                                        <a asp-action="PhanCong" asp-route-maDangKy="@x.MaDangKy"
+                                        class="btn btn-sm btn-primary">Phân công GVHD</a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="ThayDoiGVHD" asp-route-maPhanCong="@x.MaPhanCongHienTai"
+                                        class="btn btn-sm btn-outline-primary">Đổi GVHD</a>
+                                    }
                                 }
-                                else
+
+                                @if (tienDoKe != "" && x.MaPhanCongHienTai != null)
                                 {
-                                    <a asp-action="ThayDoiGVHD" asp-route-maPhanCong="@x.MaPhanCongHienTai"
-                                       class="btn btn-sm btn-outline-primary">Đổi GVHD</a>
+                                    <form asp-action="CapNhatTienDo" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@x.MaDangKy" />
+                                        <input type="hidden" name="tienDo" value="@tienDoKe" />
+                                        <input type="hidden" name="quayLai" value="@quayLai" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                                onclick="return confirm('Cập nhật tiến độ?');">@nutKe</button>
+                                    </form>
                                 }
+
                                 <a asp-action="LichSuPhanCong" asp-route-maDangKy="@x.MaDangKy"
-                                   class="btn btn-sm btn-outline-secondary">Lịch sử</a>
+                                class="btn btn-sm btn-outline-secondary">Lịch sử</a>
                             }
                             else
                             {

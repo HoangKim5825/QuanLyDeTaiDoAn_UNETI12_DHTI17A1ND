@@ -6,10 +6,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Data;
+using QuanLyDeTaiDoAn.Filters;
 using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
+    [YeuCauAdmin]   
     public class ThongKeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -19,25 +21,10 @@ namespace QuanLyDeTaiDoAn.Controllers
             _context = context;
         }
 
-        // Kiểm tra quyền ngay tại Controller (mục 5.3), không chỉ ẩn menu trên View.
-        // Trả về null nếu là Admin; ngược lại trả về kết quả chuyển hướng.
-        private IActionResult? KiemTraAdmin()
-        {
-            var vaiTro = HttpContext.Session.GetString("VaiTro");
-            if (string.IsNullOrEmpty(vaiTro))
-                return RedirectToAction("DangNhap", "TaiKhoan");   // đổi theo tên action Login của Module 1
-            if (vaiTro != "Admin")
-                return RedirectToAction("Index", "Home");
-            return null;
-        }
-
         // ===== DASHBOARD =====
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
-
             // Số chỗ còn = SoSinhVienToiDa - số đăng ký "DaDuyet" (tính lúc truy vấn)
             var deTaiVaChoCon = _context.DeTais.Select(d => new
             {
@@ -77,9 +64,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var chan = KiemTraAdmin();
-            if (chan != null) return chan;
-
             var vm = new ThongKeViewModel();
 
             // 1. Số đề tài theo từng lĩnh vực (GroupBy)
