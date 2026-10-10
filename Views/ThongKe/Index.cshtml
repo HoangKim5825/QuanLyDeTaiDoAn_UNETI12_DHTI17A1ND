@@ -6,6 +6,19 @@
 @model QuanLyDeTaiDoAn.ViewModels.ThongKeViewModel
 @{
     ViewData["Title"] = "Thống kê";
+
+    string Json(object o) => System.Text.Json.JsonSerializer.Serialize(o);
+
+    var jLinhVuc   = Json(Model.DeTaiTheoLinhVuc.Select(x => new { x.Nhan, x.SoLuong }));
+    var jTrangThai = Json(Model.DangKyTheoTrangThai.Select(x => new { x.Nhan, x.SoLuong }));
+    var jThang     = Json(Model.DangKyTheoThang.Select(x => new { x.Nhan, x.SoLuong }));
+    var jNamHoc    = Json(Model.DeTaiTheoNamHocHocKy.Select(x => new { x.Nhan, x.SoLuong }));
+    var jGiangVien = Json(Model.TaiGiangVien.Select(x => new { x.HoTen, x.SoDangHuongDan, x.SoToiDa }));
+    var jChoCon    = Json(Model.DeTaiChoCon.Select(x => new { x.TenDeTai, x.SoDaDuyet, SoChoCon = Math.Max(0, x.SoChoCon) }));
+    int chieuCaoChoCon = Model.DeTaiChoCon.Count * 26 + 90;
+
+    var jTyLe = Json(Model.TaiGiangVien.Select(x => new { x.HoTen, x.SoDangHuongDan, x.SoToiDa, x.TyLeSuDung }));
+    int chieuCaoTyLe = Model.TaiGiangVien.Count * 28 + 80;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -17,6 +30,98 @@
 @functions {
     public static string Rong() => "Chưa có dữ liệu.";
 }
+
+<h4 class="mb-3">Biểu đồ trực quan</h4>
+<div class="row g-4 mb-4">
+
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Số đề tài theo lĩnh vực</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartLinhVuc"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartLinhVuc"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Số đăng ký theo trạng thái</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartTrangThai"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartTrangThai"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Số đăng ký theo tháng</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartThang"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartThang"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Số đề tài theo năm học / học kỳ</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartNamHoc"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartNamHoc"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-12">
+        <div class="card"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Tải hướng dẫn của giảng viên (đang hướng dẫn / tối đa)</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartGiangVien"></div>
+            </div>
+            <div style="position:relative;height:340px"><canvas id="chartGiangVien"></canvas></div>
+        </div></div>
+    </div>
+
+    @* ===== MỚI: tỷ lệ sử dụng giảng viên ===== *@
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Tổng suất hướng dẫn: đã dùng / còn trống</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartSuDung"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartSuDung"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Giảng viên theo mức sử dụng</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartNhomGV"></div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="chartNhomGV"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-12">
+        <div class="card"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="card-title mb-0">Tỷ lệ sử dụng khả năng hướng dẫn của từng giảng viên (%)</h6>
+                <div class="btn-group btn-group-sm" data-chart="chartTyLeGV"></div>
+            </div>
+            <div style="position:relative;height:@(chieuCaoTyLe)px"><canvas id="chartTyLeGV"></canvas></div>
+        </div></div>
+    </div>
+
+    <div class="col-12">
+        <div class="card"><div class="card-body">
+            <h6 class="card-title">Sức chứa từng đề tài (đã duyệt / còn chỗ)</h6>
+            <div style="position:relative;height:@(chieuCaoChoCon)px"><canvas id="chartChoCon"></canvas></div>
+        </div></div>
+    </div>
+</div>
 
 <div class="row g-4">
     <div class="col-md-6">
@@ -149,3 +254,219 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        const dsLinhVuc   = @Html.Raw(jLinhVuc);
+        const dsTrangThai = @Html.Raw(jTrangThai);
+        const dsThang     = @Html.Raw(jThang);
+        const dsNamHoc    = @Html.Raw(jNamHoc);
+        const dsGiangVien = @Html.Raw(jGiangVien);
+        const dsChoCon    = @Html.Raw(jChoCon);
+        const dsTyLe      = @Html.Raw(jTyLe);
+
+        const mau = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#20c997', '#fd7e14', '#6c757d'];
+        const cat = (s, n) => s.length > n ? s.substring(0, n) + '…' : s;
+        const soNguyen = { beginAtZero: true, ticks: { precision: 0 } };
+
+        const khongDuLieu = (id) => {
+            document.getElementById(id).parentElement.innerHTML =
+                '<p class="text-muted text-center mt-5">Chưa có dữ liệu.</p>';
+        };
+
+        // Vẽ biểu đồ + tự sinh nhóm nút đổi loại.
+        // loaiList: [[loai, nhãn nút], ...]; taoCauHinh(loai) trả về cấu hình Chart.js
+        const tao = (id, loaiList, taoCauHinh) => {
+            const canvas = document.getElementById(id);
+            const nhom = document.querySelector('[data-chart="' + id + '"]');
+            let chart = null;
+
+            const ve = (loai) => {
+                if (chart) chart.destroy();
+                chart = new Chart(canvas, taoCauHinh(loai));
+                if (nhom) nhom.querySelectorAll('button').forEach(b =>
+                    b.classList.toggle('active', b.dataset.loai === loai));
+            };
+
+            if (nhom) {
+                nhom.innerHTML = '';
+                loaiList.forEach(([loai, nhan]) => {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'btn btn-outline-secondary';
+                    b.dataset.loai = loai;
+                    b.textContent = nhan;
+                    b.addEventListener('click', () => ve(loai));
+                    nhom.appendChild(b);
+                });
+            }
+            ve(loaiList[0][0]);
+        };
+
+        // Cấu hình dùng chung cho dữ liệu dạng "nhãn - số lượng"
+        // Hỗ trợ: doughnut, pie, bar (cột), barH (cột ngang), line
+        const cauHinhDanhMuc = (labels, data, tenDuLieu, loai) => {
+            const tron = loai === 'doughnut' || loai === 'pie';
+            const ngang = loai === 'barH';
+            return {
+                type: ngang ? 'bar' : loai,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: tenDuLieu,
+                        data: data,
+                        backgroundColor: loai === 'line' ? 'rgba(13,110,253,.15)' : mau,
+                        borderColor: loai === 'line' ? '#0d6efd' : undefined,
+                        fill: loai === 'line',
+                        tension: .3
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    indexAxis: ngang ? 'y' : 'x',
+                    plugins: { legend: { display: tron, position: 'bottom' } },
+                    scales: tron ? {} : (ngang ? { x: soNguyen } : { y: soNguyen })
+                }
+            };
+        };
+
+        const nutTronCot   = [['doughnut', 'Vành khuyên'], ['pie', 'Tròn'], ['bar', 'Cột']];
+        const nutCotDuong  = [['bar', 'Cột'], ['line', 'Đường'], ['barH', 'Ngang']];
+        const nutDuongCot  = [['line', 'Đường'], ['bar', 'Cột']];
+
+        // 1. Đề tài theo lĩnh vực
+        if (dsLinhVuc.length)
+            tao('chartLinhVuc', nutTronCot, l =>
+                cauHinhDanhMuc(dsLinhVuc.map(x => x.Nhan), dsLinhVuc.map(x => x.SoLuong), 'Số đề tài', l));
+        else khongDuLieu('chartLinhVuc');
+
+        // 2. Đăng ký theo trạng thái
+        if (dsTrangThai.length)
+            tao('chartTrangThai', [['pie', 'Tròn'], ['doughnut', 'Vành khuyên'], ['bar', 'Cột']], l =>
+                cauHinhDanhMuc(dsTrangThai.map(x => x.Nhan), dsTrangThai.map(x => x.SoLuong), 'Số đăng ký', l));
+        else khongDuLieu('chartTrangThai');
+
+        // 3. Đăng ký theo tháng
+        if (dsThang.length)
+            tao('chartThang', nutDuongCot, l =>
+                cauHinhDanhMuc(dsThang.map(x => x.Nhan), dsThang.map(x => x.SoLuong), 'Số đăng ký', l));
+        else khongDuLieu('chartThang');
+
+        // 4. Đề tài theo năm học / học kỳ
+        if (dsNamHoc.length)
+            tao('chartNamHoc', nutCotDuong, l =>
+                cauHinhDanhMuc(dsNamHoc.map(x => x.Nhan), dsNamHoc.map(x => x.SoLuong), 'Số đề tài', l));
+        else khongDuLieu('chartNamHoc');
+
+        // 5. Tải giảng viên: 2 dataset (đang hướng dẫn vs tối đa)
+        if (dsGiangVien.length)
+            tao('chartGiangVien', [['bar', 'Cột'], ['line', 'Đường'], ['barH', 'Ngang']], l => {
+                const ngang = l === 'barH';
+                return {
+                    type: ngang ? 'bar' : l,
+                    data: {
+                        labels: dsGiangVien.map(x => cat(x.HoTen, 14)),
+                        datasets: [
+                            { label: 'Đang hướng dẫn', data: dsGiangVien.map(x => x.SoDangHuongDan),
+                              backgroundColor: '#0d6efd', borderColor: '#0d6efd', tension: .3 },
+                            { label: 'Tối đa', data: dsGiangVien.map(x => x.SoToiDa),
+                              backgroundColor: l === 'line' ? '#adb5bd' : '#dee2e6', borderColor: '#adb5bd', tension: .3 }
+                        ]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        indexAxis: ngang ? 'y' : 'x',
+                        scales: ngang ? { x: soNguyen } : { y: soNguyen },
+                        plugins: { tooltip: { callbacks: { title: i => dsGiangVien[i[0].dataIndex].HoTen } } }
+                    }
+                };
+            });
+        else khongDuLieu('chartGiangVien');
+
+        // ===== MỚI 6. Tổng suất hướng dẫn: đã dùng / còn trống =====
+        if (dsTyLe.length) {
+            const tongDung = dsTyLe.reduce((s, x) => s + x.SoDangHuongDan, 0);
+            const tongMax  = dsTyLe.reduce((s, x) => s + x.SoToiDa, 0);
+            tao('chartSuDung', [['doughnut', 'Vành khuyên'], ['pie', 'Tròn']], l => ({
+                type: l,
+                data: {
+                    labels: ['Đã dùng', 'Còn trống'],
+                    datasets: [{ data: [tongDung, Math.max(0, tongMax - tongDung)], backgroundColor: ['#0d6efd', '#dee2e6'] }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            }));
+        } else { khongDuLieu('chartSuDung'); }
+
+        // ===== MỚI 7. Giảng viên theo mức sử dụng =====
+        if (dsTyLe.length) {
+            const nhom = [
+                { nhan: 'Chưa hướng dẫn',      dem: dsTyLe.filter(x => x.SoDangHuongDan === 0).length },
+                { nhan: 'Dưới 75%',            dem: dsTyLe.filter(x => x.SoDangHuongDan > 0 && x.TyLeSuDung < 75).length },
+                { nhan: 'Từ 75% đến dưới 100%', dem: dsTyLe.filter(x => x.TyLeSuDung >= 75 && x.TyLeSuDung < 100).length },
+                { nhan: 'Đạt giới hạn',        dem: dsTyLe.filter(x => x.TyLeSuDung >= 100).length }
+            ];
+            const mauNhom = ['#6c757d', '#198754', '#ffc107', '#dc3545'];
+            tao('chartNhomGV', [['pie', 'Tròn'], ['doughnut', 'Vành khuyên'], ['bar', 'Cột']], l => ({
+                type: l,
+                data: {
+                    labels: nhom.map(x => x.nhan),
+                    datasets: [{ label: 'Số giảng viên', data: nhom.map(x => x.dem), backgroundColor: mauNhom }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: l !== 'bar', position: 'bottom' } },
+                    scales: l === 'bar' ? { y: soNguyen } : {}
+                }
+            }));
+        } else { khongDuLieu('chartNhomGV'); }
+
+        // ===== MỚI 8. Tỷ lệ sử dụng từng giảng viên (%) =====
+        if (dsTyLe.length) {
+            const mauTyLe = dsTyLe.map(x => x.TyLeSuDung >= 100 ? '#dc3545' : x.TyLeSuDung >= 75 ? '#ffc107' : '#198754');
+            tao('chartTyLeGV', [['barH', 'Ngang'], ['bar', 'Cột'], ['radar', 'Radar']], l => {
+                const ngang = l === 'barH';
+                const truc = { beginAtZero: true, suggestedMax: 100, ticks: { callback: v => v + '%' } };
+                return {
+                    type: ngang ? 'bar' : l,
+                    data: {
+                        labels: dsTyLe.map(x => cat(x.HoTen, 16)),
+                        datasets: [{
+                            label: 'Tỷ lệ sử dụng (%)',
+                            data: dsTyLe.map(x => x.TyLeSuDung),
+                            backgroundColor: l === 'radar' ? 'rgba(13,110,253,.2)' : mauTyLe,
+                            borderColor: '#0d6efd'
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        indexAxis: ngang ? 'y' : 'x',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { title: i => dsTyLe[i[0].dataIndex].HoTen } }
+                        },
+                        scales: l === 'radar' ? { r: { beginAtZero: true, suggestedMax: 100 } }
+                              : ngang ? { x: truc } : { y: truc }
+                    }
+                };
+            });
+        } else { khongDuLieu('chartTyLeGV'); }
+
+        // 9. Sức chứa đề tài - stacked bar ngang (giữ cố định vì nhiều nhãn)
+        if (dsChoCon.length) new Chart('chartChoCon', {
+            type: 'bar',
+            data: {
+                labels: dsChoCon.map(x => cat(x.TenDeTai, 40)),
+                datasets: [
+                    { label: 'Đã duyệt', data: dsChoCon.map(x => x.SoDaDuyet), backgroundColor: '#198754' },
+                    { label: 'Còn chỗ', data: dsChoCon.map(x => x.SoChoCon), backgroundColor: '#ffc107' }
+                ]
+            },
+            options: {
+                indexAxis: 'y', maintainAspectRatio: false,
+                scales: { x: { stacked: true, ticks: { precision: 0 } }, y: { stacked: true } },
+                plugins: { tooltip: { callbacks: { title: i => dsChoCon[i[0].dataIndex].TenDeTai } } }
+            }
+        }); else khongDuLieu('chartChoCon');
+    </script>
+}
