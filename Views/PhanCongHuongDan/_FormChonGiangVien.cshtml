@@ -43,23 +43,31 @@ else
 {
     <div class="mb-3">
         <label asp-for="MaGiangVien" class="form-label"></label>
-        <select asp-for="MaGiangVien" class="form-select">
-            <option value="">-- Chọn giảng viên --</option>
-            @foreach (var g in Model.GiangVienPhuHop)
-            {
-                <option value="@g.MaGiangVien" selected="@(Model.MaGiangVien == g.MaGiangVien)">
-                    @g.HoTen (đang hướng dẫn @g.SoDangHuongDan/@g.SoToiDa)
-                </option>
-            }
-        </select>
+        <div class="input-group">
+            <select asp-for="MaGiangVien" id="selGiangVien" class="form-select" data-ma-dang-ky="@Model.MaDangKy"
+                    data-ma-phan-cong-cu="@Model.MaPhanCongCu">
+                <option value="">-- Chọn giảng viên --</option>
+                @foreach (var g in Model.GiangVienPhuHop)
+                {
+                    <option value="@g.MaGiangVien" selected="@(Model.MaGiangVien == g.MaGiangVien)">
+                        @g.HoTen (đang hướng dẫn @g.SoDangHuongDan/@g.SoToiDa)
+                    </option>
+                }
+            </select>
+            <button type="button" id="btnLamMoiGV" class="btn btn-outline-secondary">Làm mới</button>
+        </div>
         <span asp-validation-for="MaGiangVien" class="text-danger"></span>
         <div class="form-text">Chỉ hiển thị giảng viên đúng lĩnh vực, đang công tác và còn suất hướng dẫn.</div>
+        <div id="chiTietGV" class="card card-body bg-light mt-2 d-none"></div>
     </div>
 
     <div class="mb-3">
         <label asp-for="GhiChu" class="form-label">
             @(Model.LaThayDoi ? "Lý do thay đổi" : "Ghi chú")
-            @if (Model.LaThayDoi) { <span class="text-danger">*</span> }
+            @if (Model.LaThayDoi)
+            {
+                <span class="text-danger">*</span>
+            }
         </label>
         <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
         <span asp-validation-for="GhiChu" class="text-danger"></span>

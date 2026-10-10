@@ -14,6 +14,7 @@ namespace QuanLyDeTaiDoAn.ViewModels
         public int MaDangKy { get; set; }
         public int MaSinhVien { get; set; }
         public string TenSinhVien { get; set; } = string.Empty;
+        public int MaDeTai { get; set; }
         public string TenDeTai { get; set; } = string.Empty;
         public string TenLinhVuc { get; set; } = string.Empty;
         public DateTime NgayDangKy { get; set; }
