@@ -1,0 +1,269 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - Giao diện danh sách đăng ký chờ duyệt (tìm kiếm, lọc, phân trang, duyệt/từ chối)
+*@
+@model QuanLyDeTaiDoAn.ViewModels.DanhSachChoDuyetViewModel
+@{
+    ViewData["Title"] = "Duyệt đăng ký đề tài";
+    // URL hiện tại (kèm query) để sau khi Duyệt/Từ chối quay lại đúng trang, giữ nguyên bộ lọc
+    var quayLai = Context.Request.Path + Context.Request.QueryString;
+    var loi = (TempData["Loi"] as string)?.Split('|', StringSplitOptions.RemoveEmptyEntries);
+}
+
+@functions {
+    static string NhanTrangThai(string t) => t switch
+    {
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        "DaHuy" => "Đã hủy",
+        _ => t
+    };
+
+    static string MauTrangThai(string t) => t switch
+    {
+        "ChoDuyet" => "warning text-dark",
+        "DaDuyet" => "success",
+        "TuChoi" => "danger",
+        _ => "secondary"
+    };
+}
+
+<h2 class="mb-3">Duyệt đăng ký đề tài</h2>
+
+@if (TempData["ThanhCong"] is string thanhCong)
+{
+    <div class="alert alert-success">@thanhCong</div>
+}
+@if (loi != null && loi.Length > 0)
+{
+    <div class="alert alert-danger">
+        <strong>Không thể thực hiện:</strong>
+        <ul class="mb-0">
+            @foreach (var l in loi) { <li>@l</li> }
+        </ul>
+    </div>
+}
+
+@* ===== Bộ lọc / tìm kiếm ===== *@
+<form method="get" asp-action="DanhSachChoDuyet" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="tuKhoa" value="@Model.TuKhoa" class="form-control"
+               placeholder="Mã / tên sinh viên, tên đề tài..." />
+    </div>
+    <div class="col-md-3">
+        <select name="maLinhVuc" asp-items="Model.LinhVucs" class="form-select">
+            <option value="">-- Tất cả lĩnh vực --</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="trangThai" class="form-select">
+            <option value="ChoDuyet" selected="@(Model.TrangThai == "ChoDuyet")">Chờ duyệt</option>
+            <option value="DaDuyet" selected="@(Model.TrangThai == "DaDuyet")">Đã duyệt</option>
+            <option value="TuChoi" selected="@(Model.TrangThai == "TuChoi")">Từ chối</option>
+            <option value="DaHuy" selected="@(Model.TrangThai == "DaHuy")">Đã hủy</option>
+            <option value="TatCa" selected="@(Model.TrangThai == "TatCa")">Tất cả trạng thái</option>
+        </select>
+    </div>
+    <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-primary">Tìm / Lọc</button>
+    </div>
+</form>
+
+<p class="text-muted">Tìm thấy <strong>@Model.TotalItems</strong> đăng ký.</p>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info">Không có đăng ký nào phù hợp với điều kiện tìm kiếm.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Sinh viên</th>
+                    <th>Đề tài</th>
+                    <th>Lĩnh vực</th>
+                    <th>Ngày đăng ký</th>
+                    <th class="text-center">Chỗ còn</th>
+                    <th>Trạng thái</th>
+                    <th style="min-width:170px">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var x in Model.Items)
+                {
+                    var tienDo = x.TrangThaiThucHien;
+                    string nhanTienDo = tienDo switch
+                    {
+                        "DangThucHien" => "Đang thực hiện",
+                        "HoanThanh" => "Hoàn thành",
+                        _ => "Chưa bắt đầu"
+                    };
+                    string tienDoKe = tienDo switch
+                    {
+                        "ChuaBatDau" => "DangThucHien",
+                        "DangThucHien" => "HoanThanh",
+                        _ => ""
+                    };
+                    string nutKe = tienDo == "ChuaBatDau" ? "Bắt đầu thực hiện" : "Đánh dấu hoàn thành";
+                    <tr>
+                        <td>@x.MaDangKy</td>
+                        <td>@x.TenSinhVien<br /><small class="text-muted">Mã SV: @x.MaSinhVien</small></td>
+                        <td>
+                            @x.TenDeTai
+                            @if (!string.IsNullOrEmpty(x.LyDoDangKy))
+                            {
+                                <br /><small class="text-muted">Lý do: @x.LyDoDangKy</small>
+                            }
+                        </td>
+                        <td>@x.TenLinhVuc</td>
+                        <td>@x.NgayDangKy.ToString("dd/MM/yyyy")</td>
+                        <td class="text-center @(x.SoChoCon <= 0 ? "text-danger fw-bold" : "")">@x.SoChoCon</td>
+                        <td>
+                            <span class="badge bg-@MauTrangThai(x.TrangThai)">@NhanTrangThai(x.TrangThai)</span>
+                            @if (x.TrangThai == "DaDuyet")
+                            {
+                                <br />
+                                @if (tienDo == "HoanThanh")
+                                {
+                                    <small class="text-success">Đã hoàn thành</small>
+                                }
+                                else if (x.TenGiangVienHienTai != null)
+                                {
+                                    <small>GVHD: <strong>@x.TenGiangVienHienTai</strong></small>
+                                }
+                                else
+                                {
+                                    <small class="text-danger">Chưa có GVHD</small>
+                                }
+                                <br /><small>Tiến độ: <strong>@nhanTienDo</strong></small>
+                            }
+                            @if (!string.IsNullOrEmpty(x.GhiChuDuyet))
+                            {
+                                <br /><small class="text-muted">@x.GhiChuDuyet</small>
+                            }
+                        </td>
+                        <td>
+                            @* Chỉ hiện nút khi trạng thái cho phép; Controller vẫn kiểm tra lại *@
+                            @if (x.TrangThai == "ChoDuyet")
+                            {
+                                <form asp-action="Duyet" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@x.MaDangKy" />
+                                    <input type="hidden" name="quayLai" value="@quayLai" />
+                                    <button type="submit" class="btn btn-sm btn-success"
+                                            onclick="return confirm('Duyệt đăng ký này?');">Duyệt</button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle="modal" data-bs-target="#modalTuChoi"
+                                        data-id="@x.MaDangKy" data-ten="@x.TenSinhVien - @x.TenDeTai">
+                                    Từ chối
+                                </button>
+                            }
+                            else if (x.TrangThai == "DaDuyet")
+                            {
+                                @if (tienDo != "HoanThanh")
+                                {
+                                    @if (x.MaPhanCongHienTai == null)
+                                    {
+                                        <a asp-action="PhanCong" asp-route-maDangKy="@x.MaDangKy"
+                                        class="btn btn-sm btn-primary">Phân công GVHD</a>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="ThayDoiGVHD" asp-route-maPhanCong="@x.MaPhanCongHienTai"
+                                        class="btn btn-sm btn-outline-primary">Đổi GVHD</a>
+                                    }
+                                }
+
+                                @if (tienDoKe != "" && x.MaPhanCongHienTai != null)
+                                {
+                                    <form asp-action="CapNhatTienDo" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@x.MaDangKy" />
+                                        <input type="hidden" name="tienDo" value="@tienDoKe" />
+                                        <input type="hidden" name="quayLai" value="@quayLai" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                                onclick="return confirm('Cập nhật tiến độ?');">@nutKe</button>
+                                    </form>
+                                }
+
+                                <a asp-action="LichSuPhanCong" asp-route-maDangKy="@x.MaDangKy"
+                                class="btn btn-sm btn-outline-secondary">Lịch sử</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* ===== Phân trang: giữ từ khóa, lĩnh vực, trạng thái khi chuyển trang ===== *@
+    @if (Model.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination">
+                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-action="DanhSachChoDuyet"
+                       asp-route-page="@(Model.Page - 1)" asp-route-tuKhoa="@Model.TuKhoa"
+                       asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">Trước</a>
+                </li>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-action="DanhSachChoDuyet"
+                           asp-route-page="@p" asp-route-tuKhoa="@Model.TuKhoa"
+                           asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">@p</a>
+                    </li>
+                }
+                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-action="DanhSachChoDuyet"
+                       asp-route-page="@(Model.Page + 1)" asp-route-tuKhoa="@Model.TuKhoa"
+                       asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">Sau</a>
+                </li>
+            </ul>
+            <div class="text-muted">Trang @Model.Page / @Model.TotalPages</div>
+        </nav>
+    }
+}
+
+@* ===== Modal nhập lý do từ chối ===== *@
+<div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="TuChoi" method="post" class="modal-content">
+            <input type="hidden" name="id" id="tuChoiId" />
+            <input type="hidden" name="quayLai" value="@quayLai" />
+            <div class="modal-header">
+                <h5 class="modal-title">Từ chối đăng ký</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p id="tuChoiTen" class="fw-semibold"></p>
+                <label for="tuChoiGhiChu" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                <textarea name="ghiChu" id="tuChoiGhiChu" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const modal = document.getElementById('modalTuChoi');
+        modal.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            document.getElementById('tuChoiId').value = btn.getAttribute('data-id');
+            document.getElementById('tuChoiTen').textContent = btn.getAttribute('data-ten');
+            document.getElementById('tuChoiGhiChu').value = '';
+        });
+    </script>
+}

@@ -1,0 +1,51 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View Đăng nhập
+*@
+@model QuanLyDeTaiDoAn.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Đăng nhập hệ thống</h3>
+
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="mb-3">
+                        <label asp-for="TenDangNhap" class="form-label"></label>
+                        <input asp-for="TenDangNhap" class="form-control" autofocus />
+                        <span asp-validation-for="TenDangNhap" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MatKhau" class="form-label"></label>
+                        <input asp-for="MatKhau" class="form-control" type="password" />
+                        <span asp-validation-for="MatKhau" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+                </form>
+
+                <hr />
+                <p class="text-muted small text-center mb-0">
+                    Tài khoản mẫu (theo SeedData.cs của nhóm):<br />
+                    Admin: <b>admin1</b> / <b>admin123</b><br />
+                    Sinh viên: <b>sv001</b> / <b>123456</b><br />
+                    Tài khoản bị khóa (test): <b>sv030</b> / <b>123456</b>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

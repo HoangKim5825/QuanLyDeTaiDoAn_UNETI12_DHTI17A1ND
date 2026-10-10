@@ -1,0 +1,224 @@
+@*
+    Họ và tên: <Nguyen Quang Huy>
+    Mã sinh viên: <23203100080>
+    Nội dung thực hiện: View danh sách đề tài - tìm kiếm, lọc, sắp xếp, phân trang (Module 2)
+*@
+@using Microsoft.AspNetCore.Http
+@using QuanLyDeTaiDoAn.Constants
+@using QuanLyDeTaiDoAn.ViewModels
+@model DeTaiFilterViewModel
+
+@{
+    ViewData["Title"] = "Danh sách đề tài";
+
+    // Chỉ để ẩn/hiện nút. Quyền thật sự vẫn phải kiểm tra ở Controller (GĐ 6).
+    // Nếu Session của M1 chưa merge, tạm đặt: var laAdmin = true;
+    var laAdmin = Context.Session.GetString("VaiTro") == "Admin";
+
+    var kq = Model.KetQua;
+    int tuMuc = kq.TotalItems == 0 ? 0 : (kq.Page - 1) * kq.PageSize + 1;
+    int denMuc = Math.Min(kq.Page * kq.PageSize, kq.TotalItems);
+
+    // Có đang áp dụng bộ lọc/tìm kiếm không (để hiện nút "Xóa bộ lọc")
+    bool dangLoc = !string.IsNullOrWhiteSpace(Model.Keyword) || Model.MaLinhVuc.HasValue
+        || Model.NamHoc.HasValue || !string.IsNullOrEmpty(Model.HocKy)
+        || !string.IsNullOrEmpty(Model.TrangThai) || Model.ConCho.HasValue;
+
+    string BadgeTrangThai(string tt) => tt switch
+    {
+        TrangThaiConst.DeTaiTT.MoDangKy => "text-bg-success",
+        TrangThaiConst.DeTaiTT.DuSoLuong => "text-bg-warning",
+        TrangThaiConst.DeTaiTT.TamKhoa => "text-bg-secondary",
+        _ => "text-bg-dark"
+    };
+
+    string BadgeCho(int soCho) => soCho <= 0 ? "text-bg-danger" : soCho == 1 ? "text-bg-warning" : "text-bg-success";
+
+    int trangDau = Math.Max(1, kq.Page - 2);
+    int trangCuoi = Math.Min(kq.TotalPages, kq.Page + 2);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Danh sách đề tài</h1>
+    @if (laAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">Thêm đề tài</a>
+    }
+</div>
+
+<partial name="_ThongBao" />
+
+@* ===== 4.x: Form tìm kiếm + lọc + sắp xếp (GET, nên điều kiện nằm trên URL) ===== *@
+<form asp-action="Index" method="get" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-12 col-lg-6">
+            <label asp-for="Keyword" class="form-label">Từ khóa</label>
+            <input asp-for="Keyword" class="form-control" placeholder="Tên đề tài, mô tả hoặc yêu cầu" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <label asp-for="MaLinhVuc" class="form-label">Lĩnh vực</label>
+            <select asp-for="MaLinhVuc" asp-items="Model.LinhVucs" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-3">
+            <label asp-for="TrangThai" class="form-label">Trạng thái</label>
+            <select asp-for="TrangThai" asp-items="Model.TrangThais" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="NamHoc" class="form-label">Năm học</label>
+            <select asp-for="NamHoc" asp-items="Model.NamHocs" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="HocKy" class="form-label">Học kỳ</label>
+            <select asp-for="HocKy" asp-items="Model.HocKys" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label asp-for="ConCho" class="form-label">Số chỗ</label>
+            <select name="ConCho" id="ConCho" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.ConCho == true)">Còn chỗ</option>
+                <option value="false" selected="@(Model.ConCho == false)">Hết chỗ</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-3">
+            <label asp-for="SortOrder" class="form-label">Sắp xếp</label>
+            <select asp-for="SortOrder" asp-items="Model.CacKieuSapXep" class="form-select"></select>
+        </div>
+        <div class="col-6 col-lg-1">
+            <label asp-for="PageSize" class="form-label">Số dòng</label>
+            <select name="PageSize" id="PageSize" class="form-select">
+                @foreach (var n in new[] { 5, 8, 12, 20 })
+                {
+                    <option value="@n" selected="@(Model.PageSize == n)">@n</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Tìm và lọc</button>
+        @if (dangLoc)
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+        }
+    </div>
+</form>
+
+@if (kq.TotalItems == 0)
+{
+    @* ===== 4.8: Không có kết quả ===== *@
+    <div class="alert alert-info" role="status">
+        <p class="mb-2 fw-semibold">Không tìm thấy đề tài nào phù hợp.</p>
+        <p class="mb-0">
+            Thử bỏ bớt điều kiện lọc hoặc đổi từ khóa.
+            @if (dangLoc)
+            {
+                <a asp-action="Index" class="alert-link">Xem tất cả đề tài</a>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <p class="text-muted mb-2">
+        Hiển thị @tuMuc–@denMuc trong @kq.TotalItems đề tài (trang @kq.Page/@kq.TotalPages)
+    </p>
+
+    @* ===== 5.4: Bảng hiển thị tên lĩnh vực, số chỗ còn, badge trạng thái ===== *@
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">STT</th>
+                    <th scope="col">Tên đề tài</th>
+                    <th scope="col">Lĩnh vực</th>
+                    <th scope="col">Năm học</th>
+                    <th scope="col">Học kỳ</th>
+                    <th scope="col" class="text-end">SV tối đa</th>
+                    <th scope="col" class="text-end">Đã duyệt</th>
+                    <th scope="col" class="text-center">Chỗ còn</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int stt = tuMuc; }
+                @foreach (var item in kq.Items)
+                {
+                    <tr>
+                        <td>@(stt++)</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.MaDeTai" class="fw-semibold text-decoration-none">@item.TenDeTai</a>
+                        </td>
+                        <td>@item.TenLinhVuc</td>
+                        <td>@item.NamHoc</td>
+                        <td>@item.HocKy</td>
+                        <td class="text-end">@item.SoSinhVienToiDa</td>
+                        <td class="text-end">@item.SoDaDangKy</td>
+                        <td class="text-center">
+                            <span class="badge @BadgeCho(item.SoChoCon)">@(item.SoChoCon <= 0 ? "Hết chỗ" : item.SoChoCon.ToString())</span>
+                        </td>
+                        <td>
+                            <span class="badge @BadgeTrangThai(item.TrangThaiHienThi)">@TrangThaiConst.DeTaiTT.Nhan(item.TrangThaiHienThi)</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <a asp-action="Details" asp-route-id="@item.MaDeTai" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            @if (laAdmin)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.MaDeTai" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@item.MaDeTai" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xóa đề tài này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* ===== 4.7 + 5.5: Phân trang, link nào cũng mang đủ điều kiện lọc/sắp xếp ===== *@
+    @if (kq.TotalPages > 1)
+    {
+        <nav aria-label="Phân trang danh sách đề tài">
+            <ul class="pagination justify-content-center flex-wrap">
+                <li class="page-item @(kq.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(1)">Đầu</a>
+                </li>
+                <li class="page-item @(kq.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.Page - 1)">Trước</a>
+                </li>
+
+                @for (int i = trangDau; i <= trangCuoi; i++)
+                {
+                    <li class="page-item @(i == kq.Page ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(i)"
+                           aria-current="@(i == kq.Page ? "page" : null)">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(kq.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.Page + 1)">Sau</a>
+                </li>
+                <li class="page-item @(kq.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.TotalPages)">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+
+@section Scripts {
+    <script>
+        // Đổi kiểu sắp xếp hoặc số dòng thì áp dụng ngay, không cần bấm nút
+        document.getElementById('SortOrder').addEventListener('change', function () { this.form.submit(); });
+        document.getElementById('PageSize').addEventListener('change', function () { this.form.submit(); });
+    </script>
+}

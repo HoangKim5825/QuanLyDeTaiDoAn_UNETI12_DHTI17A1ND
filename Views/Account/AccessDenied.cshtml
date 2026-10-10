@@ -1,0 +1,14 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View Từ chối truy cập
+*@
+@{
+    ViewData["Title"] = "Từ chối truy cập";
+}
+
+<div class="text-center mt-5">
+    <h2 class="text-danger">Bạn không có quyền truy cập chức năng này</h2>
+    <p>Chức năng này chỉ dành cho Admin.</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Về trang chủ</a>
+</div>

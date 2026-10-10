@@ -1,0 +1,24 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - Giao diện thay đổi giảng viên hướng dẫn (giữ lịch sử phân công)
+*@
+@model QuanLyDeTaiDoAn.ViewModels.PhanCongViewModel
+@{
+    ViewData["Title"] = "Thay đổi giảng viên hướng dẫn";
+}
+
+<h2 class="mb-3">Thay đổi giảng viên hướng dẫn</h2>
+
+<div class="alert alert-info">
+    Phân công hiện tại sẽ được chuyển sang trạng thái <strong>Đã thay đổi</strong> và ghi ngày kết thúc;
+    hệ thống tạo thêm một phân công mới cho giảng viên được chọn. Lịch sử cũ không bị mất.
+</div>
+
+<form asp-action="ThayDoiGVHD" method="post">
+    <partial name="_FormChonGiangVien" model="Model" />
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

@@ -1,0 +1,80 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - Giao diện lịch sử phân công giảng viên hướng dẫn (timeline)
+*@
+@model QuanLyDeTaiDoAn.ViewModels.LichSuPhanCongViewModel
+@{
+    ViewData["Title"] = "Lịch sử phân công";
+}
+
+@functions {
+    static string NhanTrangThai(string t) => t switch
+    {
+        "DangHuongDan" => "Đang hướng dẫn",
+        "DaThayDoi" => "Đã thay đổi",
+        "KetThuc" => "Kết thúc",
+        _ => t
+    };
+
+    static string MauTrangThai(string t) => t switch
+    {
+        "DangHuongDan" => "success",
+        "DaThayDoi" => "secondary",
+        "KetThuc" => "dark",
+        _ => "secondary"
+    };
+}
+
+<h2 class="mb-3">Lịch sử phân công hướng dẫn</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Đăng ký</dt>
+    <dd class="col-sm-9">#@Model.MaDangKy</dd>
+    <dt class="col-sm-3">Sinh viên</dt>
+    <dd class="col-sm-9">@Model.TenSinhVien</dd>
+    <dt class="col-sm-3">Đề tài</dt>
+    <dd class="col-sm-9">@Model.TenDeTai</dd>
+    <dt class="col-sm-3">Lĩnh vực</dt>
+    <dd class="col-sm-9">@Model.TenLinhVuc</dd>
+</dl>
+
+@if (!Model.DanhSach.Any())
+{
+    <div class="alert alert-info">Đăng ký này chưa từng được phân công giảng viên hướng dẫn.</div>
+}
+else
+{
+    <div class="ms-2 ps-4" style="border-left:3px solid #dee2e6;">
+        @foreach (var x in Model.DanhSach)
+        {
+            <div class="card mb-3 border-@MauTrangThai(x.TrangThai)">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="card-title mb-1">
+                            @(string.IsNullOrEmpty(x.HocVi) ? "" : x.HocVi + " ")@x.TenGiangVien
+                        </h5>
+                        <span class="badge bg-@MauTrangThai(x.TrangThai) align-self-start">@NhanTrangThai(x.TrangThai)</span>
+                    </div>
+                    <div class="text-muted">
+                        Từ <strong>@x.NgayBatDau.ToString("dd/MM/yyyy HH:mm")</strong>
+                        @if (x.NgayKetThuc.HasValue)
+                        {
+                            <text> đến <strong>@x.NgayKetThuc.Value.ToString("dd/MM/yyyy HH:mm")</strong></text>
+                        }
+                        else
+                        {
+                            <text> đến nay</text>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(x.GhiChu))
+                    {
+                        <div class="mt-1">Ghi chú: @x.GhiChu</div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<a asp-action="DanhSachChoDuyet" asp-route-trangThai="DaDuyet" class="btn btn-secondary">Quay lại</a>

@@ -1,0 +1,58 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Các trường nhập liệu dùng chung cho Create/Edit giảng viên (Module 2)
+    Lưu ý: KHÔNG có ô nhập tải hiện tại, vì được tính từ các phân công đang hướng dẫn.
+*@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model QuanLyDeTaiDoAn.Models.GiangVien
+
+<div class="row g-3">
+    <div class="col-12 col-md-8">
+        <label asp-for="HoTen" class="form-label"></label>
+        <input asp-for="HoTen" class="form-control" />
+        <span asp-validation-for="HoTen" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label asp-for="HocVi" class="form-label"></label>
+        <input asp-for="HocVi" class="form-control" list="dsHocVi" />
+        <datalist id="dsHocVi">
+            <option value="Thạc sĩ"></option>
+            <option value="Tiến sĩ"></option>
+            <option value="Phó giáo sư"></option>
+            <option value="Giáo sư"></option>
+        </datalist>
+        <span asp-validation-for="HocVi" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" type="email" class="form-control" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <label asp-for="SoDienThoai" class="form-label"></label>
+        <input asp-for="SoDienThoai" type="tel" class="form-control" />
+        <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-5">
+        <label asp-for="MaLinhVuc" class="form-label"></label>
+        <select asp-for="MaLinhVuc" asp-items="(IEnumerable<SelectListItem>)ViewBag.LinhVucs" class="form-select"></select>
+        <span asp-validation-for="MaLinhVuc" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label asp-for="SoSinhVienHuongDanToiDa" class="form-label"></label>
+        <input asp-for="SoSinhVienHuongDanToiDa" class="form-control" min="1" />
+        <span asp-validation-for="SoSinhVienHuongDanToiDa" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <label asp-for="TrangThai" class="form-label"></label>
+        <select asp-for="TrangThai" asp-items="(IEnumerable<SelectListItem>)ViewBag.TrangThais" class="form-select"></select>
+        <span asp-validation-for="TrangThai" class="text-danger"></span>
+    </div>
+</div>

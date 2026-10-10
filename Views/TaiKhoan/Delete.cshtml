@@ -1,0 +1,37 @@
+@*
+    Họ và tên: [Điền họ tên của bạn]
+    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Nội dung thực hiện: Module 1 - View xác nhận xóa tài khoản
+*@
+@model QuanLyDeTaiDoAn.Models.TaiKhoan
+@{
+    ViewData["Title"] = "Xóa tài khoản";
+}
+
+<h3 class="text-danger">Xác nhận xóa tài khoản</h3>
+
+@if ((bool)ViewBag.CoHoSoSinhVien)
+{
+    <div class="alert alert-warning">
+        Tài khoản này đã có hồ sơ <b>Sinh viên</b> liên kết (do Module Sinh viên quản lý).
+        Hệ thống sẽ <b>không cho xóa</b> để tránh mất dữ liệu liên quan — hãy dùng chức năng
+        <b>Khóa tài khoản</b> ở trang danh sách thay vì xóa.
+    </div>
+}
+
+<dl class="row">
+    <dt class="col-sm-3">Tên đăng nhập</dt>
+    <dd class="col-sm-9">@Model.TenDangNhap</dd>
+
+    <dt class="col-sm-3">Họ tên</dt>
+    <dd class="col-sm-9">@Model.HoTen</dd>
+
+    <dt class="col-sm-3">Vai trò</dt>
+    <dd class="col-sm-9">@Model.VaiTro</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="MaTaiKhoan" />
+    <button type="submit" class="btn btn-danger" @(((bool)ViewBag.CoHoSoSinhVien) ? "disabled" : "")>Xác nhận xóa</button>
+    <a class="btn btn-secondary" asp-action="Index">Hủy</a>
+</form>

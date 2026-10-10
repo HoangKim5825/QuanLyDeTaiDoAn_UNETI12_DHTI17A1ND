@@ -1,0 +1,122 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: View danh sách giảng viên, tìm kiếm, lọc, hiển thị tải hướng dẫn (Module 2)
+*@
+@using QuanLyDeTaiDoAn.Constants
+@model QuanLyDeTaiDoAn.ViewModels.GiangVienFilterViewModel
+
+@{
+    ViewData["Title"] = "Danh sách giảng viên";
+
+    bool dangLoc = !string.IsNullOrWhiteSpace(Model.Keyword) || Model.MaLinhVuc.HasValue
+        || !string.IsNullOrEmpty(Model.TrangThai) || Model.ConTai.HasValue;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h3 mb-0">Danh sách giảng viên</h1>
+    <a asp-action="Create" class="btn btn-primary">Thêm giảng viên</a>
+</div>
+
+<partial name="_ThongBao" />
+
+<form asp-action="Index" method="get" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-12 col-lg-4">
+            <label asp-for="Keyword" class="form-label">Từ khóa</label>
+            <input asp-for="Keyword" class="form-control" placeholder="Họ tên hoặc email" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <label asp-for="MaLinhVuc" class="form-label">Lĩnh vực</label>
+            <select asp-for="MaLinhVuc" asp-items="Model.LinhVucs" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-6 col-lg-3">
+            <label asp-for="TrangThai" class="form-label">Trạng thái</label>
+            <select asp-for="TrangThai" asp-items="Model.TrangThais" class="form-select">
+                <option value="">Tất cả</option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-2">
+            <label asp-for="ConTai" class="form-label">Tải hướng dẫn</label>
+            <select name="ConTai" id="ConTai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.ConTai == true)">Còn tải</option>
+                <option value="false" selected="@(Model.ConTai == false)">Đã đạt giới hạn</option>
+            </select>
+        </div>
+    </div>
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Tìm và lọc</button>
+        @if (dangLoc)
+        {
+            <a asp-action="Index" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+        }
+    </div>
+</form>
+
+@if (!Model.KetQua.Any())
+{
+    <div class="alert alert-info" role="status">
+        <p class="mb-2 fw-semibold">Không tìm thấy giảng viên nào phù hợp.</p>
+        <p class="mb-0">
+            Thử bỏ bớt điều kiện lọc hoặc đổi từ khóa.
+            @if (dangLoc)
+            {
+                <a asp-action="Index" class="alert-link">Xem tất cả giảng viên</a>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <p class="text-muted mb-2">Có @Model.KetQua.Count giảng viên.</p>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">STT</th>
+                    <th scope="col">Họ và tên</th>
+                    <th scope="col">Học vị</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Lĩnh vực</th>
+                    <th scope="col" class="text-center">Tải hiện tại</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int stt = 1; }
+                @foreach (var gv in Model.KetQua)
+                {
+                    string badgeTai = !gv.ConTai ? "text-bg-danger"
+                        : (gv.SoSinhVienHuongDanToiDa - gv.TaiHienTai == 1 ? "text-bg-warning" : "text-bg-success");
+                    bool dangCongTac = gv.TrangThai == TrangThaiConst.GiangVienTT.DangCongTac;
+                    <tr>
+                        <td>@(stt++)</td>
+                        <td><a asp-action="Details" asp-route-id="@gv.MaGiangVien" class="fw-semibold text-decoration-none">@gv.HoTen</a></td>
+                        <td>@gv.HocVi</td>
+                        <td>@gv.Email</td>
+                        <td>@gv.TenLinhVuc</td>
+                        <td class="text-center">
+                            <span class="badge @badgeTai">@gv.TaiHienTai/@gv.SoSinhVienHuongDanToiDa</span>
+                        </td>
+                        <td>
+                            <span class="badge @(dangCongTac ? "text-bg-success" : "text-bg-secondary")">@TrangThaiConst.GiangVienTT.Nhan(gv.TrangThai)</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <a asp-action="Details" asp-route-id="@gv.MaGiangVien" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            <a asp-action="Edit" asp-route-id="@gv.MaGiangVien" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                            <form asp-action="Delete" asp-route-id="@gv.MaGiangVien" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa giảng viên này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
