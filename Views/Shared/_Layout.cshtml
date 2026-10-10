@@ -67,6 +67,12 @@
                                 <a class="nav-link text-dark" asp-controller="ThongKe" asp-action="Index">Thống kê</a>
                             </li>
                         }
+                        @if (daDangNhap && !laAdmin)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="GVHDCuaToi" asp-action="Index">GVHD của tôi</a>
+                            </li>
+                        }
                     </ul>
 
                     <ul class="navbar-nav">

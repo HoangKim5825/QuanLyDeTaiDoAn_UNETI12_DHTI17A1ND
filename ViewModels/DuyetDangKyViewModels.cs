@@ -3,6 +3,8 @@
 // Nội dung thực hiện: Module 4 - ViewModel danh sách đăng ký chờ duyệt (tìm kiếm, lọc, phân trang)
 
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace QuanLyDeTaiDoAn.ViewModels
@@ -57,13 +59,13 @@ namespace QuanLyDeTaiDoAn.ViewModels
         [Display(Name = "Ghi chú / Lý do")]
         public string? GhiChu { get; set; }
 
-        // ===== Chỉ để hiển thị, nạp lại từ DB mỗi lần trả View =====
-        public string TenSinhVien { get; set; } = string.Empty;
-        public string TenDeTai { get; set; } = string.Empty;
-        public string TenLinhVuc { get; set; } = string.Empty;
-        public string? TenGiangVienHienTai { get; set; }
-        public DateTime? NgayBatDauHienTai { get; set; }
-        public List<GiangVienTaiItem> GiangVienPhuHop { get; set; } = new();
+        // ===== Chỉ để hiển thị, nạp lại từ DB mỗi lần trả View; không bind, không validate =====
+        [BindNever, ValidateNever] public string TenSinhVien { get; set; } = string.Empty;
+        [BindNever, ValidateNever] public string TenDeTai { get; set; } = string.Empty;
+        [BindNever, ValidateNever] public string TenLinhVuc { get; set; } = string.Empty;
+        [BindNever, ValidateNever] public string? TenGiangVienHienTai { get; set; }
+        [BindNever, ValidateNever] public DateTime? NgayBatDauHienTai { get; set; }
+        [BindNever, ValidateNever] public List<GiangVienTaiItem> GiangVienPhuHop { get; set; } = new();
 
         public bool LaThayDoi => MaPhanCongCu.HasValue;
     }
@@ -88,5 +90,16 @@ namespace QuanLyDeTaiDoAn.ViewModels
         public string TenLinhVuc { get; set; } = string.Empty;
         public string TrangThaiDangKy { get; set; } = string.Empty;
         public List<LichSuPhanCongItem> DanhSach { get; set; } = new();
+    }
+    public class GVHDCuaToiItem
+    {
+        public int MaDangKy { get; set; }
+        public string TenDeTai { get; set; } = string.Empty;
+        public string TenLinhVuc { get; set; } = string.Empty;
+        public string TrangThai { get; set; } = string.Empty;
+        public string TrangThaiThucHien { get; set; } = string.Empty;
+        public string? GhiChuDuyet { get; set; }
+        public string? TenGiangVienHienTai { get; set; }
+        public List<LichSuPhanCongItem> LichSu { get; set; } = new();
     }
 }
