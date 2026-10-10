@@ -16,7 +16,7 @@ using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
-    [YeuCauAdmin]   
+    [YeuCauAdmin]
     public class PhanCongHuongDanController : Controller
     {
         private const int PageSize = 10;
@@ -82,6 +82,7 @@ namespace QuanLyDeTaiDoAn.Controllers
                     MaDangKy = dk.MaDangKy,
                     MaSinhVien = dk.MaSinhVien,
                     TenSinhVien = dk.SinhVien!.HoTen,
+                    MaDeTai = dk.MaDeTai,
                     TenDeTai = dk.DeTai!.TenDeTai,
                     TenLinhVuc = dk.DeTai.LinhVuc!.TenLinhVuc,
                     NgayDangKy = dk.NgayDangKy,
@@ -234,6 +235,59 @@ namespace QuanLyDeTaiDoAn.Controllers
 
             TempData["ThanhCong"] = $"Đã từ chối đăng ký #{id}.";
             return QuayLai(quayLai);
+        }
+
+        // ===== AJAX: Duyệt đăng ký, trả JSON =====
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DuyetAjax(int id)
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
+            var kq = await _nghiepVu.KiemTraDieuKienDuyetAsync(id);
+            if (!kq.HopLe)
+                return Json(new { thanhCong = false, loi = kq.Loi });
+
+            var dk = await _context.DangKyDeTais.FindAsync(id);
+            if (dk == null) return Json(new { thanhCong = false, loi = new[] { "Không tìm thấy đăng ký." } });
+
+            dk.TrangThai = TrangThaiDangKy.DaDuyet;
+            dk.GhiChuDuyet = "Đủ điều kiện, đã được duyệt";
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            // Số chỗ còn mới của đề tài (tính lại bằng LINQ) để cập nhật các dòng cùng đề tài
+            int? soChoCon = await _nghiepVu.TinhSoChoConAsync(dk.MaDeTai);
+
+            return Json(new
+            {
+                thanhCong = true,
+                thongBao = $"Đã duyệt đăng ký #{id}.",
+                maDeTai = dk.MaDeTai,
+                soChoCon
+            });
+        }
+
+        // ===== AJAX: Từ chối đăng ký, trả JSON =====
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TuChoiAjax(int id, string? ghiChu)
+        {
+            if (string.IsNullOrWhiteSpace(ghiChu))
+                return Json(new { thanhCong = false, loi = new[] { "Vui lòng nhập lý do từ chối." } });
+
+            var dk = await _context.DangKyDeTais.FindAsync(id);
+            if (dk == null)
+                return Json(new { thanhCong = false, loi = new[] { "Không tìm thấy đăng ký." } });
+
+            if (dk.TrangThai != TrangThaiDangKy.ChoDuyet)
+                return Json(new { thanhCong = false, loi = new[] { $"Chỉ đăng ký chờ duyệt mới được từ chối (hiện tại: {dk.TrangThai})." } });
+
+            dk.TrangThai = TrangThaiDangKy.TuChoi;
+            dk.GhiChuDuyet = ghiChu.Trim();
+            await _context.SaveChangesAsync();
+
+            return Json(new { thanhCong = true, thongBao = $"Đã từ chối đăng ký #{id}." });
         }
 
         // ============================================================
@@ -461,6 +515,51 @@ namespace QuanLyDeTaiDoAn.Controllers
                 .ToListAsync();
 
             return View(vm);
+        }
+        // ===== AJAX: danh sách GV phù hợp (đúng lĩnh vực, đang công tác, còn tải) =====
+        [HttpGet]
+        public async Task<IActionResult> LayGiangVienJson(int maDangKy, int? maPhanCongCu)
+        {
+            int? loaiTru = null;
+            if (maPhanCongCu.HasValue)
+            {
+                loaiTru = await _context.PhanCongHuongDans
+                    .Where(p => p.MaPhanCong == maPhanCongCu.Value && p.TrangThai == TrangThaiPhanCong.DangHuongDan)
+                    .Select(p => (int?)p.MaGiangVien)
+                    .FirstOrDefaultAsync();
+            }
+
+            var ds = await _nghiepVu.LayGiangVienPhuHopAsync(maDangKy, loaiTru);
+            return Json(ds.Select(g => new
+            {
+                g.MaGiangVien,
+                g.HoTen,
+                g.TenLinhVuc,
+                g.SoDangHuongDan,
+                g.SoToiDa,
+                SoSuatCon = g.SoToiDa - g.SoDangHuongDan
+            }));
+        }
+
+        // ===== AJAX: chi tiết 1 giảng viên (hiện khi chọn trong dropdown) =====
+        [HttpGet]
+        public async Task<IActionResult> ChiTietGiangVienJson(int maGiangVien)
+        {
+            var gv = await _context.GiangViens
+                .Where(g => g.MaGiangVien == maGiangVien)
+                .Select(g => new
+                {
+                    g.HoTen,
+                    g.HocVi,
+                    g.Email,
+                    TenLinhVuc = g.LinhVuc!.TenLinhVuc,
+                    g.SoSinhVienHuongDanToiDa,
+                    SoDangHuongDan = g.DanhSachPhanCong.Count(p => p.TrangThai == TrangThaiPhanCong.DangHuongDan),
+                    TongPhanCong = g.DanhSachPhanCong.Count()
+                })
+                .FirstOrDefaultAsync();
+
+            return gv == null ? NotFound() : Json(gv);
         }
     }
 }

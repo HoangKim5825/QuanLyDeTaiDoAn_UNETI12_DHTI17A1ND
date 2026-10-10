@@ -199,84 +199,76 @@ namespace QuanLyDeTaiDoAn.Data
 
             // ===== 7. PHÂN CÔNG HƯỚNG DẪN =====
             var phanCongs = new List<PhanCongHuongDan>();
-            var daDuyetList = dangKys.Where(d => d.TrangThai == "DaDuyet").ToList();
-
-            // Đếm tải giả lập theo GV để cố tình cho 1 GV đạt giới hạn, 1 GV còn 1 suất
+            var daDuyetList = dangKys.Where(d => d.TrangThai == "DaDuyet").OrderBy(d => d.MaDangKy).ToList();
             var taiHienTai = giangViens.ToDictionary(g => g.MaGiangVien, g => 0);
 
-            int gvIdx = 0;
-            foreach (var dk in daDuyetList)
+            foreach (var nhom in daDuyetList.GroupBy(d => d.DeTai!.MaLinhVuc))
             {
-                // Tìm giảng viên cùng lĩnh vực với đề tài, còn tải
-                var ungVien = giangViens
-                    .Where(g => g.LinhVuc!.MaLinhVuc == dk.DeTai!.MaLinhVuc
-                                && g.TrangThai == "DangCongTac"
-                                && taiHienTai[g.MaGiangVien] < g.SoSinhVienHuongDanToiDa)
+                // GV đang công tác cùng lĩnh vực, giới hạn nhỏ xếp trước => nhanh chóng có GV đạt giới hạn
+                var gvs = giangViens
+                    .Where(g => g.MaLinhVuc == nhom.Key && g.TrangThai == "DangCongTac")
+                    .OrderBy(g => g.SoSinhVienHuongDanToiDa).ThenBy(g => g.MaGiangVien)
                     .ToList();
 
-                if (!ungVien.Any()) continue; // bỏ qua nếu lĩnh vực đó không còn GV rảnh (hiếm khi xảy ra với data này)
-
-                var gv = ungVien[gvIdx % ungVien.Count];
-                gvIdx++;
-
-                phanCongs.Add(new PhanCongHuongDan
+                foreach (var dk in nhom)
                 {
-                    DangKyDeTai = dk,
-                    GiangVien = gv,
-                    NgayBatDau = dk.NgayDangKy.AddDays(3),
-                    NgayKetThuc = null,
-                    TrangThai = "DangHuongDan",
-                    GhiChu = "Phân công lần đầu"
-                });
-                taiHienTai[gv.MaGiangVien]++;
+                    // Cố ý để đăng ký cuối của lĩnh vực "Khoa học dữ liệu" CHƯA có GVHD (test chức năng Phân công)
+                    if (nhom.Key == linhVucs[4].MaLinhVuc && dk == nhom.Last()) continue;
+
+                    var gv = gvs.FirstOrDefault(g => taiHienTai[g.MaGiangVien] < g.SoSinhVienHuongDanToiDa);
+                    if (gv == null) continue;
+
+                    phanCongs.Add(new PhanCongHuongDan
+                    {
+                        DangKyDeTai = dk,
+                        GiangVien = gv,
+                        NgayBatDau = dk.NgayDangKy.AddDays(3),
+                        NgayKetThuc = null,
+                        TrangThai = "DangHuongDan",
+                        GhiChu = "Phân công lần đầu"
+                    });
+                    taiHienTai[gv.MaGiangVien]++;
+                }
             }
 
-            // Cố tình đẩy 1 giảng viên (GV đầu tiên trong lĩnh vực 0) đạt đúng giới hạn tải
-            // bằng cách gán thêm phân công nếu còn đăng ký DaDuyet chưa được phân công
-            var gvGioiHan = giangViens[0]; // SoSinhVienHuongDanToiDa = 4
-            var dkChuaPhanCong = daDuyetList
-                .Where(dk => !phanCongs.Any(pc => pc.DangKyDeTai == dk))
-                .ToList();
-            int slotsCanFill = gvGioiHan.SoSinhVienHuongDanToiDa - taiHienTai[gvGioiHan.MaGiangVien];
-            for (int i = 0; i < slotsCanFill && i < dkChuaPhanCong.Count; i++)
+            // ----- Trạng thái thực hiện đa dạng -----
+            // Lĩnh vực 2: đăng ký đầu tiên "Đang thực hiện"
+            var pcDangTH = phanCongs.FirstOrDefault(p => p.DangKyDeTai!.DeTai!.MaLinhVuc == linhVucs[2].MaLinhVuc);
+            if (pcDangTH != null) pcDangTH.DangKyDeTai!.TrangThaiThucHien = "DangThucHien";
+
+            // Lĩnh vực 3: đăng ký đầu tiên "Hoàn thành" => phân công được đóng (KetThuc), trả lại suất hướng dẫn
+            var pcHoanThanh = phanCongs.FirstOrDefault(p => p.DangKyDeTai!.DeTai!.MaLinhVuc == linhVucs[3].MaLinhVuc);
+            if (pcHoanThanh != null)
             {
-                phanCongs.Add(new PhanCongHuongDan
-                {
-                    DangKyDeTai = dkChuaPhanCong[i],
-                    GiangVien = gvGioiHan,
-                    NgayBatDau = DateTime.Now.AddDays(-10),
-                    NgayKetThuc = null,
-                    TrangThai = "DangHuongDan",
-                    GhiChu = "Bổ sung để đạt giới hạn hướng dẫn (dữ liệu test)"
-                });
-                taiHienTai[gvGioiHan.MaGiangVien]++;
+                pcHoanThanh.DangKyDeTai!.TrangThaiThucHien = "HoanThanh";
+                pcHoanThanh.TrangThai = "KetThuc";
+                pcHoanThanh.NgayKetThuc = DateTime.Now.AddDays(-3);
+                pcHoanThanh.GhiChu = "Hoàn thành đề tài";
+                taiHienTai[pcHoanThanh.MaGiangVien == 0 ? pcHoanThanh.GiangVien!.MaGiangVien : pcHoanThanh.MaGiangVien]--;
             }
 
             context.PhanCongHuongDans.AddRange(phanCongs);
             context.SaveChanges();
 
-            // ===== 8. TRƯỜNG HỢP THAY ĐỔI GIẢNG VIÊN (lưu lịch sử) =====
-            if (phanCongs.Any())
+            // ===== 8. THAY ĐỔI GIẢNG VIÊN (lưu lịch sử) =====
+            // Lĩnh vực 0: GV Trần Thị Bình (giangViens[1]) -> GV Nguyễn Văn An (giangViens[0])
+            var pcCu = phanCongs.FirstOrDefault(p => p.GiangVien == giangViens[1] && p.TrangThai == "DangHuongDan");
+            if (pcCu != null)
             {
-                var pcCu = phanCongs[0];
+                var bayGio = DateTime.Now;
                 pcCu.TrangThai = "DaThayDoi";
-                pcCu.NgayKetThuc = DateTime.Now.AddDays(-2);
+                pcCu.NgayKetThuc = bayGio.AddDays(-2);
                 pcCu.GhiChu = "Thay đổi giảng viên hướng dẫn theo yêu cầu";
 
-                var gvMoi = giangViens.First(g => g.MaGiangVien != pcCu.MaGiangVien
-                    && g.LinhVuc!.MaLinhVuc == pcCu.DangKyDeTai!.DeTai!.MaLinhVuc
-                    && g.TrangThai == "DangCongTac");
-
-                var pcMoi = new PhanCongHuongDan
+                context.PhanCongHuongDans.Add(new PhanCongHuongDan
                 {
                     DangKyDeTai = pcCu.DangKyDeTai,
-                    GiangVien = gvMoi,
-                    NgayBatDau = DateTime.Now.AddDays(-1),
+                    GiangVien = giangViens[0],
+                    NgayBatDau = bayGio.AddDays(-2),
                     NgayKetThuc = null,
                     TrangThai = "DangHuongDan",
                     GhiChu = "Phân công lại sau khi đổi GVHD"
-                };
-                context.PhanCongHuongDans.Add(pcMoi);
+                });
                 context.SaveChanges();
             }
         }

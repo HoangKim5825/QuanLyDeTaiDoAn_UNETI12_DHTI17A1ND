@@ -32,6 +32,9 @@
 
 <h2 class="mb-3">Duyệt đăng ký đề tài</h2>
 
+<form id="ajaxToken">@Html.AntiForgeryToken()</form>
+<div id="khuThongBao"></div>
+
 @if (TempData["ThanhCong"] is string thanhCong)
 {
     <div class="alert alert-success">@thanhCong</div>
@@ -41,7 +44,10 @@
     <div class="alert alert-danger">
         <strong>Không thể thực hiện:</strong>
         <ul class="mb-0">
-            @foreach (var l in loi) { <li>@l</li> }
+            @foreach (var l in loi)
+            {
+                <li>@l</li>
+            }
         </ul>
     </div>
 }
@@ -110,7 +116,7 @@ else
                         _ => ""
                     };
                     string nutKe = tienDo == "ChuaBatDau" ? "Bắt đầu thực hiện" : "Đánh dấu hoàn thành";
-                    <tr>
+                    <tr id="dk-@x.MaDangKy" data-detai="@x.MaDeTai">
                         <td>@x.MaDangKy</td>
                         <td>@x.TenSinhVien<br /><small class="text-muted">Mã SV: @x.MaSinhVien</small></td>
                         <td>
@@ -151,15 +157,9 @@ else
                             @* Chỉ hiện nút khi trạng thái cho phép; Controller vẫn kiểm tra lại *@
                             @if (x.TrangThai == "ChoDuyet")
                             {
-                                <form asp-action="Duyet" method="post" class="d-inline">
-                                    <input type="hidden" name="id" value="@x.MaDangKy" />
-                                    <input type="hidden" name="quayLai" value="@quayLai" />
-                                    <button type="submit" class="btn btn-sm btn-success"
-                                            onclick="return confirm('Duyệt đăng ký này?');">Duyệt</button>
-                                </form>
-                                <button type="button" class="btn btn-sm btn-outline-danger"
-                                        data-bs-toggle="modal" data-bs-target="#modalTuChoi"
-                                        data-id="@x.MaDangKy" data-ten="@x.TenSinhVien - @x.TenDeTai">
+                                <button type="button" class="btn btn-sm btn-success btn-duyet" data-id="@x.MaDangKy">Duyệt</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#modalTuChoi" data-id="@x.MaDangKy" data-ten="@x.TenSinhVien - @x.TenDeTai">
                                     Từ chối
                                 </button>
                             }
@@ -169,101 +169,190 @@ else
                                 {
                                     @if (x.MaPhanCongHienTai == null)
                                     {
-                                        <a asp-action="PhanCong" asp-route-maDangKy="@x.MaDangKy"
-                                        class="btn btn-sm btn-primary">Phân công GVHD</a>
-                                    }
+                                        <a asp-action="PhanCong" asp-route-maDangKy="@x.MaDangKy" class="btn btn-sm btn-primary">Phân công
+                                            GVHD</a>
+                                        }
                                     else
-                                    {
-                                        <a asp-action="ThayDoiGVHD" asp-route-maPhanCong="@x.MaPhanCongHienTai"
-                                        class="btn btn-sm btn-outline-primary">Đổi GVHD</a>
+                                        {
+                                            <a asp-action="ThayDoiGVHD" asp-route-maPhanCong="@x.MaPhanCongHienTai"
+                                               class="btn btn-sm btn-outline-primary">Đổi GVHD</a>
+                                        }
                                     }
-                                }
 
-                                @if (tienDoKe != "" && x.MaPhanCongHienTai != null)
+                                    @if (tienDoKe != "" && x.MaPhanCongHienTai != null)
+                                    {
+                                        <form asp-action="CapNhatTienDo" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@x.MaDangKy" />
+                                            <input type="hidden" name="tienDo" value="@tienDoKe" />
+                                            <input type="hidden" name="quayLai" value="@quayLai" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                    onclick="return confirm('Cập nhật tiến độ?');">@nutKe</button>
+                                        </form>
+                                    }
+
+                                    <a asp-action="LichSuPhanCong" asp-route-maDangKy="@x.MaDangKy"
+                                       class="btn btn-sm btn-outline-secondary">Lịch sử</a>
+                                }
+                                else
                                 {
-                                    <form asp-action="CapNhatTienDo" method="post" class="d-inline">
-                                        <input type="hidden" name="id" value="@x.MaDangKy" />
-                                        <input type="hidden" name="tienDo" value="@tienDoKe" />
-                                        <input type="hidden" name="quayLai" value="@quayLai" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('Cập nhật tiến độ?');">@nutKe</button>
-                                    </form>
+                                    <span class="text-muted">—</span>
                                 }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-                                <a asp-action="LichSuPhanCong" asp-route-maDangKy="@x.MaDangKy"
-                                class="btn btn-sm btn-outline-secondary">Lịch sử</a>
-                            }
-                            else
-                            {
-                                <span class="text-muted">—</span>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-
-    @* ===== Phân trang: giữ từ khóa, lĩnh vực, trạng thái khi chuyển trang ===== *@
-    @if (Model.TotalPages > 1)
-    {
-        <nav>
-            <ul class="pagination">
-                <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
-                    <a class="page-link" asp-action="DanhSachChoDuyet"
-                       asp-route-page="@(Model.Page - 1)" asp-route-tuKhoa="@Model.TuKhoa"
-                       asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">Trước</a>
-                </li>
-                @for (int p = 1; p <= Model.TotalPages; p++)
-                {
-                    <li class="page-item @(p == Model.Page ? "active" : "")">
-                        <a class="page-link" asp-action="DanhSachChoDuyet"
-                           asp-route-page="@p" asp-route-tuKhoa="@Model.TuKhoa"
-                           asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">@p</a>
+        @* ===== Phân trang: giữ từ khóa, lĩnh vực, trạng thái khi chuyển trang ===== *@
+        @if (Model.TotalPages > 1)
+        {
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="DanhSachChoDuyet" asp-route-page="@(Model.Page - 1)"
+                           asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+                           asp-route-trangThai="@Model.TrangThai">Trước</a>
                     </li>
-                }
-                <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
-                    <a class="page-link" asp-action="DanhSachChoDuyet"
-                       asp-route-page="@(Model.Page + 1)" asp-route-tuKhoa="@Model.TuKhoa"
-                       asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">Sau</a>
-                </li>
-            </ul>
-            <div class="text-muted">Trang @Model.Page / @Model.TotalPages</div>
-        </nav>
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-action="DanhSachChoDuyet" asp-route-page="@p" asp-route-tuKhoa="@Model.TuKhoa"
+                               asp-route-maLinhVuc="@Model.MaLinhVuc" asp-route-trangThai="@Model.TrangThai">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="DanhSachChoDuyet" asp-route-page="@(Model.Page + 1)"
+                           asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+                           asp-route-trangThai="@Model.TrangThai">Sau</a>
+                    </li>
+                </ul>
+                <div class="text-muted">Trang @Model.Page / @Model.TotalPages</div>
+            </nav>
+        }
     }
-}
 
-@* ===== Modal nhập lý do từ chối ===== *@
-<div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form asp-action="TuChoi" method="post" class="modal-content">
-            <input type="hidden" name="id" id="tuChoiId" />
-            <input type="hidden" name="quayLai" value="@quayLai" />
-            <div class="modal-header">
-                <h5 class="modal-title">Từ chối đăng ký</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    @* ===== Modal nhập lý do từ chối ===== *@
+    <div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <input type="hidden" id="tuChoiId" />
+                        <div class="modal-header">
+                            <h5 class="modal-title">Từ chối đăng ký</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p id="tuChoiTen" class="fw-semibold"></p>
+                            <div id="tuChoiLoi" class="text-danger small mb-2"></div>
+                            <label for="tuChoiGhiChu" class="form-label">Lý do từ chối <span
+                                class="text-danger">*</span></label>
+                                <textarea id="tuChoiGhiChu" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                <button type="button" id="btnXacNhanTuChoi" class="btn btn-danger">Xác nhận từ chối</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-                <p id="tuChoiTen" class="fw-semibold"></p>
-                <label for="tuChoiGhiChu" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
-                <textarea name="ghiChu" id="tuChoiGhiChu" class="form-control" rows="3" required></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
+        @section Scripts {
+            <script>
+                const token = document.querySelector('#ajaxToken input[name="__RequestVerificationToken"]').value;
+                const modalEl = document.getElementById('modalTuChoi');
+                const hienThongBao = (loai, noiDung) => {
+                    const ds = Array.isArray(noiDung) ? noiDung : [noiDung];
+                    document.getElementById('khuThongBao').innerHTML =
+                        '<div class="alert alert-' + loai + ' alert-dismissible fade show">' +
+                        (ds.length > 1 ? '<ul class="mb-0">' + ds.map(l => '<li>' + l + '</li>').join('') + '</ul>' : ds[0]) +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
 
-@section Scripts {
-    <script>
-        const modal = document.getElementById('modalTuChoi');
-        modal.addEventListener('show.bs.modal', function (event) {
-            const btn = event.relatedTarget;
-            document.getElementById('tuChoiId').value = btn.getAttribute('data-id');
-            document.getElementById('tuChoiTen').textContent = btn.getAttribute('data-ten');
-            document.getElementById('tuChoiGhiChu').value = '';
-        });
-    </script>
-}
+                // Gọi POST + token, xử lý cả trường hợp bị redirect sang trang đăng nhập
+                async function goiPost(url, duLieu) {
+                    const body = new URLSearchParams(duLieu);
+                    body.append('__RequestVerificationToken', token);
+                    const res = await fetch(url, { method: 'POST', body });
+                    if (res.redirected || !(res.headers.get('content-type') || '').includes('json')) {
+                        throw new Error('Phiên đăng nhập đã hết hoặc bạn không có quyền. Hãy tải lại trang.');
+                    }
+                    return res.json();
+                }
+
+                // Đổi dòng sau khi xử lý xong: cập nhật trạng thái, bỏ nút, đổi màu
+                function capNhatDong(id, nhan, mau, ghiChu) {
+                    const tr = document.getElementById('dk-' + id);
+                    tr.querySelector('.cell-trangthai').innerHTML =
+                        '<span class="badge bg-' + mau + '">' + nhan + '</span>' +
+                        (ghiChu ? '<br /><small class="text-muted">' + ghiChu + '</small>' : '');
+                    tr.querySelector('.cell-thaotac').innerHTML = '<span class="text-muted">—</span>';
+                    tr.classList.add('table-' + (mau === 'success' ? 'success' : 'danger'));
+                }
+
+                // Cập nhật cột "Chỗ còn" cho mọi dòng cùng đề tài
+                function capNhatChoCon(maDeTai, soCho) {
+                    document.querySelectorAll('tr[data-detai="' + maDeTai + '"] .cell-chocon').forEach(td => {
+                        td.textContent = soCho;
+                        td.classList.toggle('text-danger', soCho <= 0);
+                        td.classList.toggle('fw-bold', soCho <= 0);
+                    });
+                }
+
+                // ===== DUYỆT =====
+                document.querySelectorAll('.btn-duyet').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm('Duyệt đăng ký này?')) return;
+                        const id = btn.dataset.id;
+                        btn.disabled = true;
+                        try {
+                            const kq = await goiPost('@Url.Action("DuyetAjax")', { id });
+                            if (kq.thanhCong) {
+                                capNhatDong(id, 'Đã duyệt', 'success', 'Đủ điều kiện, đã được duyệt');
+                                capNhatChoCon(kq.maDeTai, kq.soChoCon);
+                                hienThongBao('success', kq.thongBao + ' Vào mục "Đã duyệt" để phân công GVHD.');
+                            } else {
+                                hienThongBao('danger', kq.loi);
+                                btn.disabled = false;
+                            }
+                        } catch (e) {
+                            hienThongBao('danger', e.message);
+                            btn.disabled = false;
+                        }
+                    });
+                });
+
+                // ===== TỪ CHỐI =====
+                modalEl.addEventListener('show.bs.modal', function (event) {
+                    const btn = event.relatedTarget;
+                    document.getElementById('tuChoiId').value = btn.getAttribute('data-id');
+                    document.getElementById('tuChoiTen').textContent = btn.getAttribute('data-ten');
+                    document.getElementById('tuChoiGhiChu').value = '';
+                    document.getElementById('tuChoiLoi').textContent = '';
+                });
+
+                document.getElementById('btnXacNhanTuChoi').addEventListener('click', async () => {
+                    const id = document.getElementById('tuChoiId').value;
+                    const ghiChu = document.getElementById('tuChoiGhiChu').value.trim();
+                    if (!ghiChu) {
+                        document.getElementById('tuChoiLoi').textContent = 'Vui lòng nhập lý do từ chối.';
+                        return;
+                    }
+                    try {
+                        const kq = await goiPost('@Url.Action("TuChoiAjax")', { id, ghiChu });
+                        if (kq.thanhCong) {
+                            bootstrap.Modal.getInstance(modalEl).hide();
+                            capNhatDong(id, 'Từ chối', 'danger', ghiChu);
+                            hienThongBao('success', kq.thongBao);
+                        } else {
+                            document.getElementById('tuChoiLoi').textContent = kq.loi.join(' ');
+                        }
+                    } catch (e) {
+                        document.getElementById('tuChoiLoi').textContent = e.message;
+                    }
+                });
+            </script>
+        }

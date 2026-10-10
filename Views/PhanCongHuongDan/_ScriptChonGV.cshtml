@@ -1,0 +1,48 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: <23203100056>
+    Nội dung thực hiện: Module 4 - AJAX nạp dropdown giảng viên và chi tiết giảng viên
+*@
+<script>
+    const sel = document.getElementById('selGiangVien');
+    const khung = document.getElementById('chiTietGV');
+    const maDangKy = sel.dataset.maDangKy;
+    const maPhanCongCu = sel.dataset.maPhanCongCu || '';
+
+    async function napDanhSach() {
+        const daChon = sel.value;
+        const url = '@Url.Action("LayGiangVienJson")?maDangKy=' + maDangKy +
+            (maPhanCongCu ? '&maPhanCongCu=' + maPhanCongCu : '');
+        const res = await fetch(url);
+        const ds = await res.json();
+
+        sel.innerHTML = '<option value="">-- Chọn giảng viên --</option>';
+        ds.forEach(g => {
+            const o = document.createElement('option');
+            o.value = g.maGiangVien;
+            o.textContent = g.hoTen + ' (đang hướng dẫn ' + g.soDangHuongDan + '/' + g.soToiDa + ')';
+            sel.appendChild(o);
+        });
+        // giữ lại lựa chọn cũ nếu GV đó vẫn còn trong danh sách
+        if ([...sel.options].some(o => o.value === daChon)) sel.value = daChon;
+        hienChiTiet();
+    }
+
+    async function hienChiTiet() {
+        if (!sel.value) { khung.classList.add('d-none'); return; }
+        const res = await fetch('@Url.Action("ChiTietGiangVienJson")?maGiangVien=' + sel.value);
+        if (!res.ok) { khung.classList.add('d-none'); return; }
+        const g = await res.json();
+        const con = g.soSinhVienHuongDanToiDa - g.soDangHuongDan;
+        khung.innerHTML =
+            '<div><strong>' + (g.hocVi ? g.hocVi + ' ' : '') + g.hoTen + '</strong> - ' + g.tenLinhVuc + '</div>' +
+            '<div>Email: ' + g.email + '</div>' +
+            '<div>Đang hướng dẫn: <strong>' + g.soDangHuongDan + '/' + g.soSinhVienHuongDanToiDa +
+            '</strong> (còn ' + con + ' suất, tổng ' + g.tongPhanCong + ' phân công kể cả lịch sử)</div>';
+        khung.classList.remove('d-none');
+    }
+
+    sel.addEventListener('change', hienChiTiet);
+    document.getElementById('btnLamMoiGV').addEventListener('click', napDanhSach);
+    hienChiTiet();
+</script>

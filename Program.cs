@@ -48,6 +48,7 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();   // tự động tạo DB và các bảng nếu chưa có
     SeedData.Initialize(db);
 }
 app.Run();

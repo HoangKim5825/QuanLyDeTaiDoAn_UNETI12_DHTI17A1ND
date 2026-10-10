@@ -11,7 +11,7 @@ using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
-    [YeuCauAdmin]   
+    [YeuCauAdmin]
     public class ThongKeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -148,5 +148,102 @@ namespace QuanLyDeTaiDoAn.Controllers
             "DaHuy" => "Đã hủy",
             _ => trangThai
         };
+
+        // ===== AJAX: dữ liệu biểu đồ trang Thống kê (JSON) =====
+        [HttpGet]
+        public async Task<IActionResult> DuLieuJson()
+        {
+            var deTaiTheoLinhVuc = await _context.DeTais
+                .GroupBy(d => d.LinhVuc!.TenLinhVuc)
+                .Select(g => new { nhan = g.Key, soLuong = g.Count() })
+                .OrderByDescending(x => x.soLuong)
+                .ToListAsync();
+
+            var dkTheoTrangThai = (await _context.DangKyDeTais
+                    .GroupBy(dk => dk.TrangThai)
+                    .Select(g => new { TrangThai = g.Key, SoLuong = g.Count() })
+                    .ToListAsync())
+                .Select(x => new { nhan = NhanTrangThaiDangKy(x.TrangThai), soLuong = x.SoLuong })
+                .OrderByDescending(x => x.soLuong)
+                .ToList();
+
+            var dkTheoThang = (await _context.DangKyDeTais
+                    .GroupBy(dk => new { dk.NgayDangKy.Year, dk.NgayDangKy.Month })
+                    .Select(g => new { g.Key.Year, g.Key.Month, SoLuong = g.Count() })
+                    .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                    .ToListAsync())
+                .Select(x => new { nhan = $"{x.Month:00}/{x.Year}", soLuong = x.SoLuong })
+                .ToList();
+
+            var deTaiTheoNamHoc = (await _context.DeTais
+                    .GroupBy(d => new { d.NamHoc, d.HocKy })
+                    .Select(g => new { g.Key.NamHoc, g.Key.HocKy, SoLuong = g.Count() })
+                    .OrderBy(x => x.NamHoc).ThenBy(x => x.HocKy)
+                    .ToListAsync())
+                .Select(x => new { nhan = $"{x.NamHoc} - {x.HocKy}", soLuong = x.SoLuong })
+                .ToList();
+
+            var taiGiangVien = (await _context.GiangViens
+                    .Select(g => new
+                    {
+                        g.HoTen,
+                        SoToiDa = g.SoSinhVienHuongDanToiDa,
+                        SoDangHuongDan = g.DanhSachPhanCong.Count(p => p.TrangThai == "DangHuongDan")
+                    })
+                    .OrderByDescending(x => x.SoDangHuongDan).ThenBy(x => x.HoTen)
+                    .ToListAsync())
+                .Select(x => new
+                {
+                    x.HoTen,
+                    x.SoDangHuongDan,
+                    x.SoToiDa,
+                    TyLeSuDung = x.SoToiDa > 0 ? Math.Round(x.SoDangHuongDan * 100.0 / x.SoToiDa, 1) : 0
+                })
+                .ToList();
+
+            var choCon = await _context.DeTais
+                .Select(d => new
+                {
+                    d.TenDeTai,
+                    SoDaDuyet = d.DanhSachDangKy.Count(dk => dk.TrangThai == "DaDuyet"),
+                    d.SoSinhVienToiDa
+                })
+                .OrderBy(x => x.TenDeTai)
+                .ToListAsync();
+
+            return Json(new
+            {
+                linhVuc = deTaiTheoLinhVuc,
+                trangThai = dkTheoTrangThai,
+                thang = dkTheoThang,
+                namHoc = deTaiTheoNamHoc,
+                giangVien = taiGiangVien,
+                choCon = choCon.Select(x => new
+                {
+                    x.TenDeTai,
+                    x.SoDaDuyet,
+                    SoChoCon = Math.Max(0, x.SoSinhVienToiDa - x.SoDaDuyet)
+                })
+            });
+        }
+
+        // ===== AJAX: dữ liệu Dashboard (JSON) =====
+        [HttpGet]
+        public async Task<IActionResult> DashboardJson()
+        {
+            var deTaiVaChoCon = _context.DeTais.Select(d => new
+            {
+                d.TrangThai,
+                SoChoCon = d.SoSinhVienToiDa - d.DanhSachDangKy.Count(dk => dk.TrangThai == "DaDuyet")
+            });
+
+            return Json(new
+            {
+                soDeTaiConCho = await deTaiVaChoCon.CountAsync(x => x.TrangThai == "MoDangKy" && x.SoChoCon > 0),
+                soDeTaiDuSoLuong = await deTaiVaChoCon.CountAsync(x => x.SoChoCon <= 0),
+                soDangKyChoDuyet = await _context.DangKyDeTais.CountAsync(dk => dk.TrangThai == "ChoDuyet"),
+                soDangKyDaDuyet = await _context.DangKyDeTais.CountAsync(dk => dk.TrangThai == "DaDuyet")
+            });
+        }
     }
 }

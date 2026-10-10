@@ -1,0 +1,79 @@
+@*
+    Họ và tên: Hoàng Kim
+    Mã sinh viên: 23203100056
+    Nội dung thực hiện: Module 4 - Sinh viên xem GVHD và lịch sử phân công của mình
+*@
+@model List<QuanLyDeTaiDoAn.ViewModels.GVHDCuaToiItem>
+@{
+    ViewData["Title"] = "GVHD của tôi";
+}
+
+@functions {
+    static string NhanDK(string t) => t switch
+    {
+        "ChoDuyet" => "Chờ duyệt", "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối", "DaHuy" => "Đã hủy", _ => t
+    };
+    static string NhanPC(string t) => t switch
+    {
+        "DangHuongDan" => "Đang hướng dẫn", "DaThayDoi" => "Đã thay đổi",
+        "KetThuc" => "Kết thúc", _ => t
+    };
+    static string NhanTienDo(string t) => t switch
+    {
+        "DangThucHien" => "Đang thực hiện", "HoanThanh" => "Hoàn thành", _ => "Chưa bắt đầu"
+    };
+}
+
+<h2 class="mb-3">Giảng viên hướng dẫn của tôi</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Bạn chưa có đăng ký đề tài nào.</div>
+}
+
+@foreach (var x in Model)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">@x.TenDeTai</h5>
+            <p class="text-muted mb-2">Lĩnh vực: @x.TenLinhVuc</p>
+            <p class="mb-1">Trạng thái đăng ký: <strong>@NhanDK(x.TrangThai)</strong>
+                @if (!string.IsNullOrEmpty(x.GhiChuDuyet)) { <span class="text-muted">(@x.GhiChuDuyet)</span> }
+            </p>
+
+            @if (x.TrangThai == "DaDuyet")
+            {
+                <p class="mb-1">Tiến độ: <strong>@NhanTienDo(x.TrangThaiThucHien)</strong></p>
+                <p class="mb-2">
+                    GVHD hiện tại:
+                    @if (x.TenGiangVienHienTai != null) { <strong>@x.TenGiangVienHienTai</strong> }
+                    else if (x.TrangThaiThucHien == "HoanThanh") { <span class="text-success">Đã hoàn thành</span> }
+                    else { <span class="text-danger">Chưa được phân công</span> }
+                </p>
+
+                @if (x.LichSu.Any())
+                {
+                    <h6 class="mt-3">Lịch sử phân công</h6>
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr><th>Giảng viên</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Ghi chú</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in x.LichSu)
+                            {
+                                <tr>
+                                    <td>@(string.IsNullOrEmpty(p.HocVi) ? "" : p.HocVi + " ")@p.TenGiangVien</td>
+                                    <td>@p.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                                    <td>@(p.NgayKetThuc?.ToString("dd/MM/yyyy") ?? "đến nay")</td>
+                                    <td>@NhanPC(p.TrangThai)</td>
+                                    <td>@p.GhiChu</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+        </div>
+    </div>
+}
