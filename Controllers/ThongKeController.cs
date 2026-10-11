@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Filters;
+using QuanLyDeTaiDoAn.Services;
 using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
@@ -15,10 +16,12 @@ namespace QuanLyDeTaiDoAn.Controllers
     public class ThongKeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly XuatFileService _xuat;
 
-        public ThongKeController(ApplicationDbContext context)
+        public ThongKeController(ApplicationDbContext context, XuatFileService xuat)
         {
             _context = context;
+            _xuat = xuat;
         }
 
         // ===== DASHBOARD =====
@@ -244,6 +247,23 @@ namespace QuanLyDeTaiDoAn.Controllers
                 soDangKyChoDuyet = await _context.DangKyDeTais.CountAsync(dk => dk.TrangThai == "ChoDuyet"),
                 soDangKyDaDuyet = await _context.DangKyDeTais.CountAsync(dk => dk.TrangThai == "DaDuyet")
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> XuatExcel()
+        {
+            var bang = await _xuat.LayCacBangThongKeAsync();
+            return File(_xuat.XuatThongKeExcel(bang),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"ThongKe_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> XuatPdf()
+        {
+            var bang = await _xuat.LayCacBangThongKeAsync();
+            return File(_xuat.XuatThongKePdf(bang), "application/pdf",
+                $"ThongKe_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
         }
     }
 }

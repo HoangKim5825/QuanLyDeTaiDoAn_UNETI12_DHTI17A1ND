@@ -79,6 +79,13 @@
 
 <p class="text-muted">Tìm thấy <strong>@Model.TotalItems</strong> đăng ký.</p>
 
+<div class="mb-3 d-flex gap-2">
+    <a asp-action="XuatExcel" asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+       asp-route-trangThai="@Model.TrangThai" class="btn btn-sm btn-outline-success">Xuất Excel</a>
+    <a asp-action="XuatPdf" asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+       asp-route-trangThai="@Model.TrangThai" class="btn btn-sm btn-outline-danger">Xuất PDF</a>
+</div>
+
 @if (!Model.Items.Any())
 {
     <div class="alert alert-info">Không có đăng ký nào phù hợp với điều kiện tìm kiếm.</div>

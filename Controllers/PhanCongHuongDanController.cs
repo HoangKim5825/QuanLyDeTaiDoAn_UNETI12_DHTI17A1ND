@@ -24,10 +24,13 @@ namespace QuanLyDeTaiDoAn.Controllers
         private readonly ApplicationDbContext _context;
         private readonly NghiepVuService _nghiepVu;
 
-        public PhanCongHuongDanController(ApplicationDbContext context, NghiepVuService nghiepVu)
+        private readonly XuatFileService _xuat;
+
+        public PhanCongHuongDanController(ApplicationDbContext context, NghiepVuService nghiepVu, XuatFileService xuat)
         {
             _context = context;
             _nghiepVu = nghiepVu;
+            _xuat = xuat;
         }
 
         // Quay lại đúng trang danh sách (giữ nguyên từ khóa, bộ lọc, số trang)
@@ -560,6 +563,30 @@ namespace QuanLyDeTaiDoAn.Controllers
                 .FirstOrDefaultAsync();
 
             return gv == null ? NotFound() : Json(gv);
+        }
+
+        // Xuất đúng danh sách đang lọc (cùng tham số với DanhSachChoDuyet, bỏ phân trang)
+        [HttpGet]
+        public async Task<IActionResult> XuatExcel(string? tuKhoa, int? maLinhVuc,
+            string trangThai = TrangThaiDangKy.ChoDuyet)
+        {
+            var ds = await _xuat.LayDanhSachDangKyAsync(tuKhoa, maLinhVuc, trangThai);
+            var bytes = _xuat.XuatDangKyExcel(ds);
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"DanhSachDangKy_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> XuatPdf(string? tuKhoa, int? maLinhVuc,
+            string trangThai = TrangThaiDangKy.ChoDuyet)
+        {
+            var ds = await _xuat.LayDanhSachDangKyAsync(tuKhoa, maLinhVuc, trangThai);
+            string moTa = $"Trạng thái: {(trangThai == "TatCa" ? "Tất cả" : trangThai)}"
+                        + (string.IsNullOrWhiteSpace(tuKhoa) ? "" : $" • Từ khóa: {tuKhoa}");
+            var bytes = _xuat.XuatDangKyPdf(ds, moTa);
+            return File(bytes, "application/pdf",
+                $"DanhSachDangKy_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
         }
     }
 }
