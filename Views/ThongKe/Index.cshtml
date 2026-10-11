@@ -11,7 +11,11 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">Thống kê</h2>
-    <a asp-action="Dashboard" class="btn btn-outline-secondary">Về Dashboard</a>
+    <div class="d-flex gap-2">
+        <a asp-action="XuatExcel" class="btn btn-outline-success">Xuất Excel</a>
+        <a asp-action="XuatPdf" class="btn btn-outline-danger">Xuất PDF</a>
+        <a asp-action="Dashboard" class="btn btn-outline-secondary">Về Dashboard</a>
+    </div>
 </div>
 
 @* Partial dạng local function để tái sử dụng cho các bảng "nhãn - số lượng" *@
