@@ -40,25 +40,7 @@ namespace QuanLyDeTaiDoAn.Controllers
         {
             if (!LaAdmin()) return TuChoiQuyen();
 
-            var query = _context.GiangViens.AsNoTracking().AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(vm.Keyword))
-            {
-                var kw = vm.Keyword.Trim();
-                query = query.Where(g => g.HoTen.Contains(kw) || g.Email.Contains(kw));
-            }
-            if (vm.MaLinhVuc.HasValue)
-                query = query.Where(g => g.MaLinhVuc == vm.MaLinhVuc.Value);
-            if (!string.IsNullOrEmpty(vm.TrangThai))
-                query = query.Where(g => g.TrangThai == vm.TrangThai);
-
-            var items = query.ToListItems();
-
-            // Lọc theo tải tính từ phân công thực tế
-            if (vm.ConTai == true)
-                items = items.Where(x => x.TaiHienTai < x.SoSinhVienHuongDanToiDa);
-            else if (vm.ConTai == false)
-                items = items.Where(x => x.TaiHienTai >= x.SoSinhVienHuongDanToiDa);
+            var items = LocGiangVien(vm);
 
             vm.KetQua = await items.OrderBy(x => x.HoTen).ThenBy(x => x.MaGiangVien).ToListAsync();
 
@@ -206,6 +188,43 @@ namespace QuanLyDeTaiDoAn.Controllers
             await _context.SaveChangesAsync();
             TempData["ThongBao"] = $"Đã xóa giảng viên \"{gv.HoTen}\".";
             return RedirectToAction(nameof(Index));
+        }
+
+        // Tìm kiếm + lọc (dùng chung cho Index và ExportExcel)
+        private IQueryable<GiangVienListItem> LocGiangVien(GiangVienFilterViewModel vm)
+        {
+            var query = _context.GiangViens.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(vm.Keyword))
+            {
+                var kw = vm.Keyword.Trim();
+                query = query.Where(g => g.HoTen.Contains(kw) || g.Email.Contains(kw));
+            }
+            if (vm.MaLinhVuc.HasValue)
+                query = query.Where(g => g.MaLinhVuc == vm.MaLinhVuc.Value);
+            if (!string.IsNullOrEmpty(vm.TrangThai))
+                query = query.Where(g => g.TrangThai == vm.TrangThai);
+
+            var items = query.ToListItems();
+
+            // Lọc theo tải tính từ phân công thực tế
+            if (vm.ConTai == true)
+                items = items.Where(x => x.TaiHienTai < x.SoSinhVienHuongDanToiDa);
+            else if (vm.ConTai == false)
+                items = items.Where(x => x.TaiHienTai >= x.SoSinhVienHuongDanToiDa);
+            return items;
+        }
+
+        // ===== XUẤT EXCEL (nâng cao): xuất đúng danh sách đang lọc =====
+        public async Task<IActionResult> ExportExcel(GiangVienFilterViewModel vm)
+        {
+            if (!LaAdmin()) return TuChoiQuyen();
+
+            var ds = await LocGiangVien(vm).OrderBy(x => x.HoTen).ThenBy(x => x.MaGiangVien).ToListAsync();
+            var bytes = ExcelHelper.XuatGiangVien(ds);
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"DanhSachGiangVien_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
         }
 
         // ===== Hàm hỗ trợ =====
