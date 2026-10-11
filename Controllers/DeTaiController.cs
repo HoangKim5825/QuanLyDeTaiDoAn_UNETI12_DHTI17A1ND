@@ -48,42 +48,13 @@ namespace QuanLyDeTaiDoAn.Controllers
         // =====================================================================
         public async Task<IActionResult> Index(DeTaiFilterViewModel vm)
         {
-            var query = _context.DeTais.AsNoTracking().AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(vm.Keyword))
-            {
-                var kw = vm.Keyword.Trim();
-                query = query.Where(d => d.TenDeTai.Contains(kw)
-                                      || (d.MoTa != null && d.MoTa.Contains(kw))
-                                      || (d.YeuCau != null && d.YeuCau.Contains(kw)));
-            }
-
-            if (vm.MaLinhVuc.HasValue)
-                query = query.Where(d => d.MaLinhVuc == vm.MaLinhVuc.Value);
-            if (vm.NamHoc.HasValue)
-                query = query.Where(d => d.NamHoc == vm.NamHoc.Value);
-            if (!string.IsNullOrEmpty(vm.HocKy))
-                query = query.Where(d => d.HocKy == vm.HocKy);
-
-            var items = query.ToListItems();
-
-            if (vm.ConCho == true)
-                items = items.Where(x => x.SoChoCon > 0);
-            else if (vm.ConCho == false)
-                items = items.Where(x => x.SoChoCon <= 0);
-
-            if (!string.IsNullOrEmpty(vm.TrangThai))
-            {
-                if (vm.TrangThai == TrangThaiConst.DeTaiTT.DuSoLuong)
-                    items = items.Where(x => x.TrangThai == TrangThaiConst.DeTaiTT.DuSoLuong
-                        || (x.TrangThai == TrangThaiConst.DeTaiTT.MoDangKy && x.SoChoCon <= 0));
-                else
-                    items = items.Where(x => x.TrangThai == vm.TrangThai);
-            }
-
-            items = items.ApplySort(vm.SortOrder);
+            var items = LocDeTai(vm);
             vm.KetQua = await items.ToPagedResultAsync(vm.Page, vm.PageSize);
             vm.Page = vm.KetQua.Page;
+
+            // AJAX: chỉ trả phần danh sách + phân trang, không trả cả trang
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                return PartialView("_DanhSach", vm);
 
             await NapDropdownLocAsync(vm);
             return View(vm);
@@ -291,6 +262,59 @@ namespace QuanLyDeTaiDoAn.Controllers
 
             ViewBag.TrangThais = TrangThaiChoPhep
                 .Select(t => new SelectListItem(TrangThaiConst.DeTaiTT.Nhan(t), t)).ToList();
+        }
+
+        // Truy vấn -> Tìm kiếm -> Lọc -> Sắp xếp (CHƯA phân trang).
+        // Dùng chung cho Index (phân trang) và ExportExcel (lấy toàn bộ kết quả đang lọc).
+        private IQueryable<DeTaiListItem> LocDeTai(DeTaiFilterViewModel vm)
+        {
+            var query = _context.DeTais.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(vm.Keyword))
+            {
+                var kw = vm.Keyword.Trim();
+                query = query.Where(d => d.TenDeTai.Contains(kw)
+                                      || (d.MoTa != null && d.MoTa.Contains(kw))
+                                      || (d.YeuCau != null && d.YeuCau.Contains(kw)));
+            }
+
+            if (vm.MaLinhVuc.HasValue)
+                query = query.Where(d => d.MaLinhVuc == vm.MaLinhVuc.Value);
+            if (vm.NamHoc.HasValue)
+                query = query.Where(d => d.NamHoc == vm.NamHoc.Value);
+            if (!string.IsNullOrEmpty(vm.HocKy))
+                query = query.Where(d => d.HocKy == vm.HocKy);
+
+            var items = query.ToListItems();
+
+            if (vm.ConCho == true)
+                items = items.Where(x => x.SoChoCon > 0);
+            else if (vm.ConCho == false)
+                items = items.Where(x => x.SoChoCon <= 0);
+
+            if (!string.IsNullOrEmpty(vm.TrangThai))
+            {
+                if (vm.TrangThai == TrangThaiConst.DeTaiTT.DuSoLuong)
+                    items = items.Where(x => x.TrangThai == TrangThaiConst.DeTaiTT.DuSoLuong
+                        || (x.TrangThai == TrangThaiConst.DeTaiTT.MoDangKy && x.SoChoCon <= 0));
+                else
+                    items = items.Where(x => x.TrangThai == vm.TrangThai);
+            }
+
+            items = items.ApplySort(vm.SortOrder);
+            return items;
+        }
+
+        // ===== XUẤT EXCEL (nâng cao): xuất đúng danh sách đang tìm kiếm/lọc/sắp xếp =====
+        public async Task<IActionResult> ExportExcel(DeTaiFilterViewModel vm)
+        {
+            if (!LaAdmin()) return TuChoiQuyen();
+
+            var ds = await LocDeTai(vm).ToListAsync();
+            var bytes = ExcelHelper.XuatDeTai(ds);
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"DanhSachDeTai_{DateTime.Now:yyyyMMdd_HHmm}.xlsx");
         }
 
         private async Task NapDropdownLocAsync(DeTaiFilterViewModel vm)
