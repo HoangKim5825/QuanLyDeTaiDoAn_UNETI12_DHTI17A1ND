@@ -23,14 +23,15 @@ namespace QuanLyDeTaiDoAn.Controllers
 
         private readonly ApplicationDbContext _context;
         private readonly NghiepVuService _nghiepVu;
-
         private readonly XuatFileService _xuat;
+        private readonly EmailService _email;
 
-        public PhanCongHuongDanController(ApplicationDbContext context, NghiepVuService nghiepVu, XuatFileService xuat)
+        public PhanCongHuongDanController(ApplicationDbContext context, NghiepVuService nghiepVu, XuatFileService xuat, EmailService email)
         {
             _context = context;
             _nghiepVu = nghiepVu;
             _xuat = xuat;
+            _email = email;
         }
 
         // Quay lại đúng trang danh sách (giữ nguyên từ khóa, bộ lọc, số trang)
@@ -204,6 +205,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             dk.GhiChuDuyet = "Đủ điều kiện, đã được duyệt";
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
+            await _email.GuiKetQuaDuyetAsync(id, duyet: true);
 
             TempData["ThanhCong"] = $"Đã duyệt đăng ký #{id}. Bạn có thể phân công giảng viên hướng dẫn.";
             return QuayLai(quayLai);
@@ -235,6 +237,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             dk.TrangThai = TrangThaiDangKy.TuChoi;
             dk.GhiChuDuyet = ghiChu.Trim();
             await _context.SaveChangesAsync();
+            await _email.GuiKetQuaDuyetAsync(id, duyet: false, lyDo: ghiChu.Trim());
 
             TempData["ThanhCong"] = $"Đã từ chối đăng ký #{id}.";
             return QuayLai(quayLai);
@@ -258,6 +261,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             dk.GhiChuDuyet = "Đủ điều kiện, đã được duyệt";
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
+            await _email.GuiKetQuaDuyetAsync(id, duyet: true);
 
             // Số chỗ còn mới của đề tài (tính lại bằng LINQ) để cập nhật các dòng cùng đề tài
             int? soChoCon = await _nghiepVu.TinhSoChoConAsync(dk.MaDeTai);
@@ -289,6 +293,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             dk.TrangThai = TrangThaiDangKy.TuChoi;
             dk.GhiChuDuyet = ghiChu.Trim();
             await _context.SaveChangesAsync();
+            await _email.GuiKetQuaDuyetAsync(id, duyet: false, lyDo: ghiChu.Trim());
 
             return Json(new { thanhCong = true, thongBao = $"Đã từ chối đăng ký #{id}." });
         }
@@ -399,6 +404,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             });
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
+            await _email.GuiPhanCongAsync(vm.MaDangKy, vm.MaGiangVien.Value);
 
             TempData["ThanhCong"] = $"Đã phân công giảng viên hướng dẫn cho đăng ký #{vm.MaDangKy}.";
             return RedirectToAction(nameof(DanhSachChoDuyet), new { trangThai = TrangThaiDangKy.DaDuyet });
@@ -476,6 +482,9 @@ namespace QuanLyDeTaiDoAn.Controllers
 
             await _context.SaveChangesAsync();   // một SaveChanges + transaction => nguyên tử
             await tx.CommitAsync();
+
+            int maGvCu = pcCu.MaGiangVien;
+            await _email.GuiDoiGVHDAsync(pcCu.MaDangKy, maGvCu, vm.MaGiangVien.Value, vm.GhiChu!.Trim());
 
             TempData["ThanhCong"] = $"Đã thay đổi giảng viên hướng dẫn cho đăng ký #{pcCu.MaDangKy}. Lịch sử phân công được giữ nguyên.";
             return RedirectToAction(nameof(DanhSachChoDuyet), new { trangThai = TrangThaiDangKy.DaDuyet });
@@ -587,6 +596,13 @@ namespace QuanLyDeTaiDoAn.Controllers
             var bytes = _xuat.XuatDangKyPdf(ds, moTa);
             return File(bytes, "application/pdf",
                 $"DanhSachDangKy_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TestMail()
+        {
+            bool ok = await _email.GuiAsync("hoangkimt974@gmail.com", "Kim", "Test mail", "<p>Xin chào, đây là mail thử.</p>");
+            return Content(ok ? "Gửi OK" : "Gửi THẤT BẠI - xem log");
         }
     }
 }

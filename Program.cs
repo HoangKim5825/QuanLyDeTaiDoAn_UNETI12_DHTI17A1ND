@@ -15,6 +15,9 @@ builder.Services.AddScoped<NghiepVuService>();
 
 builder.Services.AddScoped<XuatFileService>();
 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<EmailService>();
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
