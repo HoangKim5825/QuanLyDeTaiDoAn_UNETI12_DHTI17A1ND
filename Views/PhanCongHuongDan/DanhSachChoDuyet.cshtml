@@ -79,6 +79,13 @@
 
 <p class="text-muted">Tìm thấy <strong>@Model.TotalItems</strong> đăng ký.</p>
 
+<div class="mb-3 d-flex gap-2">
+    <a asp-action="XuatExcel" asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+       asp-route-trangThai="@Model.TrangThai" class="btn btn-sm btn-outline-success">Xuất Excel</a>
+    <a asp-action="XuatPdf" asp-route-tuKhoa="@Model.TuKhoa" asp-route-maLinhVuc="@Model.MaLinhVuc"
+       asp-route-trangThai="@Model.TrangThai" class="btn btn-sm btn-outline-danger">Xuất PDF</a>
+</div>
+
 @if (!Model.Items.Any())
 {
     <div class="alert alert-info">Không có đăng ký nào phù hợp với điều kiện tìm kiếm.</div>
@@ -128,8 +135,8 @@ else
                         </td>
                         <td>@x.TenLinhVuc</td>
                         <td>@x.NgayDangKy.ToString("dd/MM/yyyy")</td>
-                        <td class="text-center @(x.SoChoCon <= 0 ? "text-danger fw-bold" : "")">@x.SoChoCon</td>
-                        <td>
+                        <td class="text-center cell-chocon @(x.SoChoCon <= 0 ? "text-danger fw-bold" : "")">@x.SoChoCon</td>
+                        <td class="cell-trangthai">
                             <span class="badge bg-@MauTrangThai(x.TrangThai)">@NhanTrangThai(x.TrangThai)</span>
                             @if (x.TrangThai == "DaDuyet")
                             {
@@ -153,7 +160,7 @@ else
                                 <br /><small class="text-muted">@x.GhiChuDuyet</small>
                             }
                         </td>
-                        <td>
+                        <td class="cell-thaotac">
                             @* Chỉ hiện nút khi trạng thái cho phép; Controller vẫn kiểm tra lại *@
                             @if (x.TrangThai == "ChoDuyet")
                             {
@@ -235,124 +242,128 @@ else
     @* ===== Modal nhập lý do từ chối ===== *@
     <div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal fade" id="modalTuChoi" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <input type="hidden" id="tuChoiId" />
-                        <div class="modal-header">
-                            <h5 class="modal-title">Từ chối đăng ký</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p id="tuChoiTen" class="fw-semibold"></p>
-                            <div id="tuChoiLoi" class="text-danger small mb-2"></div>
-                            <label for="tuChoiGhiChu" class="form-label">Lý do từ chối <span
-                                class="text-danger">*</span></label>
-                                <textarea id="tuChoiGhiChu" class="form-control" rows="3"></textarea>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                <button type="button" id="btnXacNhanTuChoi" class="btn btn-danger">Xác nhận từ chối</button>
-                            </div>
-                        </div>
-                    </div>
+            <div class="modal-content">
+                <input type="hidden" id="tuChoiId" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Từ chối đăng ký</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="tuChoiTen" class="fw-semibold"></p>
+                    <div id="tuChoiLoi" class="text-danger small mb-2"></div>
+                    <label for="tuChoiGhiChu" class="form-label">Lý do từ chối <span class="text-danger">*</span></label>
+                    <textarea id="tuChoiGhiChu" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="btnXacNhanTuChoi" class="btn btn-danger">Xác nhận từ chối</button>
                 </div>
             </div>
         </div>
-        @section Scripts {
-            <script>
-                const token = document.querySelector('#ajaxToken input[name="__RequestVerificationToken"]').value;
-                const modalEl = document.getElementById('modalTuChoi');
-                const hienThongBao = (loai, noiDung) => {
-                    const ds = Array.isArray(noiDung) ? noiDung : [noiDung];
-                    document.getElementById('khuThongBao').innerHTML =
-                        '<div class="alert alert-' + loai + ' alert-dismissible fade show">' +
-                        (ds.length > 1 ? '<ul class="mb-0">' + ds.map(l => '<li>' + l + '</li>').join('') + '</ul>' : ds[0]) +
-                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                };
+    </div>
+</div>
+@section Scripts {
+    <script>
+        const token = document.querySelector('#ajaxToken input[name="__RequestVerificationToken"]').value;
+        const modalEl = document.getElementById('modalTuChoi');
+        const hienThongBao = (loai, noiDung) => {
+            const ds = Array.isArray(noiDung) ? noiDung : [noiDung];
+            document.getElementById('khuThongBao').innerHTML =
+                '<div class="alert alert-' + loai + ' alert-dismissible fade show">' +
+                (ds.length > 1 ? '<ul class="mb-0">' + ds.map(l => '<li>' + l + '</li>').join('') + '</ul>' : ds[0]) +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
-                // Gọi POST + token, xử lý cả trường hợp bị redirect sang trang đăng nhập
-                async function goiPost(url, duLieu) {
-                    const body = new URLSearchParams(duLieu);
-                    body.append('__RequestVerificationToken', token);
-                    const res = await fetch(url, { method: 'POST', body });
-                    if (res.redirected || !(res.headers.get('content-type') || '').includes('json')) {
-                        throw new Error('Phiên đăng nhập đã hết hoặc bạn không có quyền. Hãy tải lại trang.');
-                    }
-                    return res.json();
-                }
-
-                // Đổi dòng sau khi xử lý xong: cập nhật trạng thái, bỏ nút, đổi màu
-                function capNhatDong(id, nhan, mau, ghiChu) {
-                    const tr = document.getElementById('dk-' + id);
-                    tr.querySelector('.cell-trangthai').innerHTML =
-                        '<span class="badge bg-' + mau + '">' + nhan + '</span>' +
-                        (ghiChu ? '<br /><small class="text-muted">' + ghiChu + '</small>' : '');
-                    tr.querySelector('.cell-thaotac').innerHTML = '<span class="text-muted">—</span>';
-                    tr.classList.add('table-' + (mau === 'success' ? 'success' : 'danger'));
-                }
-
-                // Cập nhật cột "Chỗ còn" cho mọi dòng cùng đề tài
-                function capNhatChoCon(maDeTai, soCho) {
-                    document.querySelectorAll('tr[data-detai="' + maDeTai + '"] .cell-chocon').forEach(td => {
-                        td.textContent = soCho;
-                        td.classList.toggle('text-danger', soCho <= 0);
-                        td.classList.toggle('fw-bold', soCho <= 0);
-                    });
-                }
-
-                // ===== DUYỆT =====
-                document.querySelectorAll('.btn-duyet').forEach(btn => {
-                    btn.addEventListener('click', async () => {
-                        if (!confirm('Duyệt đăng ký này?')) return;
-                        const id = btn.dataset.id;
-                        btn.disabled = true;
-                        try {
-                            const kq = await goiPost('@Url.Action("DuyetAjax")', { id });
-                            if (kq.thanhCong) {
-                                capNhatDong(id, 'Đã duyệt', 'success', 'Đủ điều kiện, đã được duyệt');
-                                capNhatChoCon(kq.maDeTai, kq.soChoCon);
-                                hienThongBao('success', kq.thongBao + ' Vào mục "Đã duyệt" để phân công GVHD.');
-                            } else {
-                                hienThongBao('danger', kq.loi);
-                                btn.disabled = false;
-                            }
-                        } catch (e) {
-                            hienThongBao('danger', e.message);
-                            btn.disabled = false;
-                        }
-                    });
-                });
-
-                // ===== TỪ CHỐI =====
-                modalEl.addEventListener('show.bs.modal', function (event) {
-                    const btn = event.relatedTarget;
-                    document.getElementById('tuChoiId').value = btn.getAttribute('data-id');
-                    document.getElementById('tuChoiTen').textContent = btn.getAttribute('data-ten');
-                    document.getElementById('tuChoiGhiChu').value = '';
-                    document.getElementById('tuChoiLoi').textContent = '';
-                });
-
-                document.getElementById('btnXacNhanTuChoi').addEventListener('click', async () => {
-                    const id = document.getElementById('tuChoiId').value;
-                    const ghiChu = document.getElementById('tuChoiGhiChu').value.trim();
-                    if (!ghiChu) {
-                        document.getElementById('tuChoiLoi').textContent = 'Vui lòng nhập lý do từ chối.';
-                        return;
-                    }
-                    try {
-                        const kq = await goiPost('@Url.Action("TuChoiAjax")', { id, ghiChu });
-                        if (kq.thanhCong) {
-                            bootstrap.Modal.getInstance(modalEl).hide();
-                            capNhatDong(id, 'Từ chối', 'danger', ghiChu);
-                            hienThongBao('success', kq.thongBao);
-                        } else {
-                            document.getElementById('tuChoiLoi').textContent = kq.loi.join(' ');
-                        }
-                    } catch (e) {
-                        document.getElementById('tuChoiLoi').textContent = e.message;
-                    }
-                });
-            </script>
+        // Gọi POST + token, xử lý cả trường hợp bị redirect sang trang đăng nhập
+        async function goiPost(url, duLieu) {
+            const body = new URLSearchParams(duLieu);
+            body.append('__RequestVerificationToken', token);
+            const res = await fetch(url, { method: 'POST', body });
+            if (res.redirected || !(res.headers.get('content-type') || '').includes('json')) {
+                throw new Error('Phiên đăng nhập đã hết hoặc bạn không có quyền. Hãy tải lại trang.');
+            }
+            return res.json();
         }
+
+        // Đổi dòng sau khi xử lý xong: cập nhật trạng thái, bỏ nút, đổi màu
+        function capNhatDong(id, nhan, mau, ghiChu) {
+            const tr = document.getElementById('dk-' + id);
+            const tt = tr.querySelector('.cell-trangthai');
+            const tt2 = tr.querySelector('.cell-thaotac');
+            if (tt) {
+                tt.innerHTML = '<span class="badge bg-' + mau + '">' + nhan + '</span>';
+                if (ghiChu) {
+                    const small = document.createElement('small');
+                    small.className = 'text-muted d-block';
+                    small.textContent = ghiChu;          // textContent: tránh chèn HTML từ lý do người dùng nhập
+                    tt.appendChild(small);
+                }
+            }
+            if (tt2) tt2.innerHTML = '<span class="text-muted">—</span>';
+            tr.classList.add('table-' + (mau === 'success' ? 'success' : 'danger'));
+        }
+
+        // Cập nhật cột "Chỗ còn" cho mọi dòng cùng đề tài
+        function capNhatChoCon(maDeTai, soCho) {
+            document.querySelectorAll('tr[data-detai="' + maDeTai + '"] .cell-chocon').forEach(td => {
+                td.textContent = soCho;
+                td.classList.toggle('text-danger', soCho <= 0);
+                td.classList.toggle('fw-bold', soCho <= 0);
+            });
+        }
+
+        // ===== DUYỆT =====
+        document.querySelectorAll('.btn-duyet').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Duyệt đăng ký này?')) return;
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                try {
+                    const kq = await goiPost('@Url.Action("DuyetAjax")', { id });
+                    if (kq.thanhCong) {
+                        capNhatDong(id, 'Đã duyệt', 'success', 'Đủ điều kiện, đã được duyệt');
+                        capNhatChoCon(kq.maDeTai, kq.soChoCon);
+                        hienThongBao('success', kq.thongBao + ' Vào mục "Đã duyệt" để phân công GVHD.');
+                    } else {
+                        hienThongBao('danger', kq.loi);
+                        btn.disabled = false;
+                    }
+                } catch (e) {
+                    hienThongBao('danger', e.message);
+                    btn.disabled = false;
+                }
+            });
+        });
+
+        // ===== TỪ CHỐI =====
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            document.getElementById('tuChoiId').value = btn.getAttribute('data-id');
+            document.getElementById('tuChoiTen').textContent = btn.getAttribute('data-ten');
+            document.getElementById('tuChoiGhiChu').value = '';
+            document.getElementById('tuChoiLoi').textContent = '';
+        });
+
+        document.getElementById('btnXacNhanTuChoi').addEventListener('click', async () => {
+            const id = document.getElementById('tuChoiId').value;
+            const ghiChu = document.getElementById('tuChoiGhiChu').value.trim();
+            if (!ghiChu) {
+                document.getElementById('tuChoiLoi').textContent = 'Vui lòng nhập lý do từ chối.';
+                return;
+            }
+            try {
+                const kq = await goiPost('@Url.Action("TuChoiAjax")', { id, ghiChu });
+                if (kq.thanhCong) {
+                    bootstrap.Modal.getInstance(modalEl).hide();
+                    capNhatDong(id, 'Từ chối', 'danger', ghiChu);
+                    hienThongBao('success', kq.thongBao);
+                } else {
+                    document.getElementById('tuChoiLoi').textContent = kq.loi.join(' ');
+                }
+            } catch (e) {
+                document.getElementById('tuChoiLoi').textContent = e.message;
+            }
+        });
+    </script>
+}
