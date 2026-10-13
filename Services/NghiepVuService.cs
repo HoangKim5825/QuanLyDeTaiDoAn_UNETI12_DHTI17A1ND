@@ -27,11 +27,7 @@ namespace QuanLyDeTaiDoAn.Services
             _context = context;
         }
 
-        // ============================================================
         // 1. TẢI HIỆN TẠI CỦA GIẢNG VIÊN (mục 8.4)
-        //    = số phân công có trạng thái "DangHuongDan"
-        //    DaThayDoi / KetThuc KHÔNG được tính.
-        // ============================================================
         public Task<int> TinhTaiGiangVienAsync(int maGiangVien)
         {
             return _context.PhanCongHuongDans
@@ -39,12 +35,7 @@ namespace QuanLyDeTaiDoAn.Services
                               && p.TrangThai == TrangThaiPhanCong.DangHuongDan);
         }
 
-        // ============================================================
         // 2. SỐ CHỖ CÒN CỦA ĐỀ TÀI (mục 6.7)
-        //    = SoSinhVienToiDa - số đăng ký "DaDuyet"
-        //    Trả về null nếu không tìm thấy đề tài.
-        //    ChoDuyet / TuChoi / DaHuy không chiếm chỗ.
-        // ============================================================
         public async Task<int?> TinhSoChoConAsync(int maDeTai)
         {
             var kq = await _context.DeTais
@@ -59,10 +50,7 @@ namespace QuanLyDeTaiDoAn.Services
             return kq == null ? null : kq.SoSinhVienToiDa - kq.SoDaDuyet;
         }
 
-        // ============================================================
         // 3. KIỂM TRA ĐIỀU KIỆN DUYỆT ĐĂNG KÝ (mục 8.1)
-        //    Gọi lại tại thời điểm duyệt, không tin dữ liệu lúc sinh viên đăng ký.
-        // ============================================================
         public async Task<KetQuaKiemTra> KiemTraDieuKienDuyetAsync(int maDangKy)
         {
             var kq = new KetQuaKiemTra();
@@ -78,15 +66,12 @@ namespace QuanLyDeTaiDoAn.Services
                 return kq;
             }
 
-            // (d) Đăng ký chưa bị hủy / xử lý trước đó -> tránh duyệt 2 lần
             if (dk.TrangThai != TrangThaiDangKy.ChoDuyet)
                 kq.Them($"Đăng ký này đã được xử lý trước đó (trạng thái hiện tại: {dk.TrangThai}).");
 
-            // (a) Sinh viên vẫn đang hoạt động
             if (dk.SinhVien == null || !dk.SinhVien.TrangThai)
                 kq.Them("Sinh viên không còn ở trạng thái hoạt động.");
 
-            // (b) Đề tài còn nhận sinh viên và còn chỗ
             if (dk.DeTai == null)
             {
                 kq.Them("Không tìm thấy đề tài của đăng ký.");
@@ -100,7 +85,6 @@ namespace QuanLyDeTaiDoAn.Services
             if (soChoCon == null || soChoCon <= 0)
                 kq.Them("Đề tài đã đủ số lượng sinh viên.");
 
-            // (c) Sinh viên chưa có đăng ký "DaDuyet" khác trong cùng đợt (cùng năm học + học kỳ)
             var daCoDeTaiKhac = await _context.DangKyDeTais.AnyAsync(x =>
                 x.MaSinhVien == dk.MaSinhVien
                 && x.MaDangKy != dk.MaDangKy
@@ -113,11 +97,7 @@ namespace QuanLyDeTaiDoAn.Services
             return kq;
         }
 
-        // ============================================================
         // 4. KIỂM TRA ĐIỀU KIỆN PHÂN CÔNG / THAY ĐỔI GVHD (mục 8.3, 8.5)
-        //    - Phân công lần đầu: maPhanCongDangThayThe = null
-        //    - Thay đổi GVHD: truyền MaPhanCong đang "DangHuongDan" cần thay
-        // ============================================================
         public async Task<KetQuaKiemTra> KiemTraDieuKienPhanCongAsync(
             int maDangKy, int maGiangVien, int? maPhanCongDangThayThe = null)
         {
@@ -134,7 +114,6 @@ namespace QuanLyDeTaiDoAn.Services
                 return kq;
             }
 
-            // Chỉ đăng ký "DaDuyet" mới được phân công (TuChoi/DaHuy/ChoDuyet đều không)
             if (dk.TrangThai != TrangThaiDangKy.DaDuyet)
                 kq.Them("Chỉ đăng ký đã duyệt mới được phân công giảng viên.");
 
@@ -142,13 +121,11 @@ namespace QuanLyDeTaiDoAn.Services
             {
                 kq.Them("Đề tài của đăng ký này đã hoàn thành, không thể phân công thêm.");
             }
-            // Sinh viên và đề tài vẫn hợp lệ
             if (dk.SinhVien == null || !dk.SinhVien.TrangThai)
                 kq.Them("Sinh viên không còn ở trạng thái hoạt động.");
             if (dk.DeTai == null || dk.DeTai.TrangThai == TrangThaiDeTai.KetThuc)
                 kq.Them("Đề tài đã kết thúc hoặc không tồn tại.");
 
-            // Giảng viên tồn tại và được phép hướng dẫn
             var gv = await _context.GiangViens.FirstOrDefaultAsync(g => g.MaGiangVien == maGiangVien);
             if (gv == null)
             {
@@ -158,30 +135,25 @@ namespace QuanLyDeTaiDoAn.Services
             if (gv.TrangThai != TrangThaiGiangVien.DangCongTac)
                 kq.Them("Giảng viên đang tạm ngừng hướng dẫn, không thể phân công mới.");
 
-            // Đúng lĩnh vực
             if (dk.DeTai != null && gv.MaLinhVuc != dk.DeTai.MaLinhVuc)
                 kq.Them("Lĩnh vực của giảng viên không phù hợp với lĩnh vực của đề tài.");
 
-            // Phân công đang hiệu lực của đăng ký này (tối đa 1)
             var pcHienTai = await _context.PhanCongHuongDans.FirstOrDefaultAsync(p =>
                 p.MaDangKy == maDangKy && p.TrangThai == TrangThaiPhanCong.DangHuongDan);
 
             if (maPhanCongDangThayThe == null)
             {
-                // Phân công lần đầu: đăng ký chưa được có phân công đang hiệu lực
                 if (pcHienTai != null)
                     kq.Them("Đăng ký này đã có giảng viên hướng dẫn đang hiệu lực. Hãy dùng chức năng Thay đổi GVHD.");
             }
             else
             {
-                // Thay đổi GVHD: phải đúng bản ghi đang hiệu lực và GV mới phải khác GV cũ
                 if (pcHienTai == null || pcHienTai.MaPhanCong != maPhanCongDangThayThe)
                     kq.Them("Phân công cần thay đổi không còn hiệu lực.");
                 else if (pcHienTai.MaGiangVien == maGiangVien)
                     kq.Them("Giảng viên mới trùng với giảng viên đang hướng dẫn.");
             }
 
-            // Tải: SoSinhVienDangHuongDan < SoSinhVienHuongDanToiDa
             var tai = await TinhTaiGiangVienAsync(maGiangVien);
             if (tai >= gv.SoSinhVienHuongDanToiDa)
                 kq.Them($"Giảng viên đã đạt giới hạn hướng dẫn ({tai}/{gv.SoSinhVienHuongDanToiDa}).");
@@ -189,10 +161,7 @@ namespace QuanLyDeTaiDoAn.Services
             return kq;
         }
 
-        // ============================================================
-        // 5. DANH SÁCH GIẢNG VIÊN HỢP LỆ ĐỂ ĐỔ DROPDOWN (View PhanCong / ThayDoiGVHD)
-        //    Lọc trong Controller trước khi ra View: đúng lĩnh vực, đang công tác, còn tải.
-        // ============================================================
+        // 5. DANH SÁCH GIẢNG VIÊN HỢP LỆ ĐỂ ĐỔ DROPDOWN
         public async Task<List<GiangVienTaiItem>> LayGiangVienPhuHopAsync(
             int maDangKy, int? loaiTruMaGiangVien = null)
         {
