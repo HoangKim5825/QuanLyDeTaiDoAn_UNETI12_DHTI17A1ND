@@ -597,12 +597,5 @@ namespace QuanLyDeTaiDoAn.Controllers
             return File(bytes, "application/pdf",
                 $"DanhSachDangKy_{DateTime.Now:yyyyMMdd_HHmm}.pdf");
         }
-
-        [HttpGet]
-        public async Task<IActionResult> TestMail()
-        {
-            bool ok = await _email.GuiAsync("hoangkimt974@gmail.com", "Kim", "Test mail", "<p>Xin chào, đây là mail thử.</p>");
-            return Content(ok ? "Gửi OK" : "Gửi THẤT BẠI - xem log");
-        }
     }
 }
