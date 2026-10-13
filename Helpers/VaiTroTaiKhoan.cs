@@ -1,6 +1,7 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - Hằng số vai trò tài khoản (Admin, SinhVien)
+
 namespace QuanLyDeTaiDoAn.Helpers
 {
     public static class VaiTroTaiKhoan

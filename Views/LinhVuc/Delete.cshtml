@@ -1,6 +1,6 @@
 @*
-    Họ và tên: [Điền họ tên của bạn]
-    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
     Nội dung thực hiện: Module 1 - View xác nhận xóa lĩnh vực
 *@
 @model QuanLyDeTaiDoAn.Models.LinhVuc
@@ -25,14 +25,14 @@
 }
 
 <dl class="row">
-    <dt class="col-sm-2">Tên lĩnh vực</dt>
+    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.TenLinhVuc)</dt>
     <dd class="col-sm-10">@Model.TenLinhVuc</dd>
 
-    <dt class="col-sm-2">Mô tả</dt>
+    <dt class="col-sm-2">@Html.DisplayNameFor(m => m.MoTa)</dt>
     <dd class="col-sm-10">@Model.MoTa</dd>
 </dl>
 
-<form asp-action="Delete" method="post">
+<form asp-action="Delete" asp-route-id="@Model.MaLinhVuc" method="post">
     <input type="hidden" asp-for="MaLinhVuc" />
     <button type="submit" class="btn btn-danger" @(dangDung ? "disabled" : "")>Xác nhận xóa</button>
     <a class="btn btn-secondary" asp-action="Index">Hủy</a>
