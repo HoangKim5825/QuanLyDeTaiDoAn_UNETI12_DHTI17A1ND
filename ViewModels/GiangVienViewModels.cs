@@ -1,5 +1,5 @@
-// Họ và tên: <ĐIỀN TÊN>
-// Mã sinh viên: <ĐIỀN MÃ SV>
+//Họ và tên: <Nguyen Quang Huy>
+// Mã sinh viên: <23203100080>
 // Nội dung thực hiện: ViewModel danh sách/lọc/chi tiết giảng viên kèm tải hướng dẫn (Module 2)
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QuanLyDeTaiDoAn.Models;

@@ -1,0 +1,136 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Partial bảng đề tài + phân trang, được tải lại bằng AJAX (Module 2)
+*@
+@using Microsoft.AspNetCore.Http
+@using QuanLyDeTaiDoAn.Constants
+@model QuanLyDeTaiDoAn.ViewModels.DeTaiFilterViewModel
+
+@{
+    // Chỉ để ẩn/hiện nút. Quyền thật sự được kiểm tra ở Controller.
+    var laAdmin = Context.Session.GetString("VaiTro") == "Admin";
+
+    var kq = Model.KetQua;
+    int tuMuc = kq.TotalItems == 0 ? 0 : (kq.Page - 1) * kq.PageSize + 1;
+    int denMuc = Math.Min(kq.Page * kq.PageSize, kq.TotalItems);
+
+    bool dangLoc = !string.IsNullOrWhiteSpace(Model.Keyword) || Model.MaLinhVuc.HasValue
+        || Model.NamHoc.HasValue || !string.IsNullOrEmpty(Model.HocKy)
+        || !string.IsNullOrEmpty(Model.TrangThai) || Model.ConCho.HasValue;
+
+    string BadgeTrangThai(string tt) => tt switch
+    {
+        TrangThaiConst.DeTaiTT.MoDangKy => "text-bg-success",
+        TrangThaiConst.DeTaiTT.DuSoLuong => "text-bg-warning",
+        TrangThaiConst.DeTaiTT.TamKhoa => "text-bg-secondary",
+        _ => "text-bg-dark"
+    };
+
+    string BadgeCho(int soCho) => soCho <= 0 ? "text-bg-danger" : soCho == 1 ? "text-bg-warning" : "text-bg-success";
+
+    int trangDau = Math.Max(1, kq.Page - 2);
+    int trangCuoi = Math.Min(kq.TotalPages, kq.Page + 2);
+}
+
+@if (kq.TotalItems == 0)
+{
+    <div class="alert alert-info" role="status">
+        <p class="mb-2 fw-semibold">Không tìm thấy đề tài nào phù hợp.</p>
+        <p class="mb-0">
+            Thử bỏ bớt điều kiện lọc hoặc đổi từ khóa.
+            @if (dangLoc)
+            {
+                <a asp-action="Index" class="alert-link">Xem tất cả đề tài</a>
+            }
+        </p>
+    </div>
+}
+else
+{
+    <p class="text-muted mb-2">
+        Hiển thị @tuMuc–@denMuc trong @kq.TotalItems đề tài (trang @kq.Page/@kq.TotalPages)
+    </p>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">STT</th>
+                    <th scope="col">Tên đề tài</th>
+                    <th scope="col">Lĩnh vực</th>
+                    <th scope="col">Năm học</th>
+                    <th scope="col">Học kỳ</th>
+                    <th scope="col" class="text-end">SV tối đa</th>
+                    <th scope="col" class="text-end">Đã duyệt</th>
+                    <th scope="col" class="text-center">Chỗ còn</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int stt = tuMuc; }
+                @foreach (var item in kq.Items)
+                {
+                    <tr>
+                        <td>@(stt++)</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.MaDeTai" class="fw-semibold text-decoration-none">@item.TenDeTai</a>
+                        </td>
+                        <td>@item.TenLinhVuc</td>
+                        <td>@item.NamHoc</td>
+                        <td>@item.HocKy</td>
+                        <td class="text-end">@item.SoSinhVienToiDa</td>
+                        <td class="text-end">@item.SoDaDangKy</td>
+                        <td class="text-center">
+                            <span class="badge @BadgeCho(item.SoChoCon)">@(item.SoChoCon <= 0 ? "Hết chỗ" : item.SoChoCon.ToString())</span>
+                        </td>
+                        <td>
+                            <span class="badge @BadgeTrangThai(item.TrangThaiHienThi)">@TrangThaiConst.DeTaiTT.Nhan(item.TrangThaiHienThi)</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <a asp-action="Details" asp-route-id="@item.MaDeTai" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            @if (laAdmin)
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.MaDeTai" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@item.MaDeTai" method="post" class="d-inline"
+                                      onsubmit="return confirm('Xóa đề tài này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (kq.TotalPages > 1)
+    {
+        <nav aria-label="Phân trang danh sách đề tài">
+            <ul class="pagination justify-content-center flex-wrap">
+                <li class="page-item @(kq.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(1)">Đầu</a>
+                </li>
+                <li class="page-item @(kq.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.Page - 1)">Trước</a>
+                </li>
+
+                @for (int i = trangDau; i <= trangCuoi; i++)
+                {
+                    <li class="page-item @(i == kq.Page ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(i)"
+                           aria-current="@(i == kq.Page ? "page" : null)">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(kq.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.Page + 1)">Sau</a>
+                </li>
+                <li class="page-item @(kq.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-all-route-data="Model.RouteValues(kq.TotalPages)">Cuối</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
