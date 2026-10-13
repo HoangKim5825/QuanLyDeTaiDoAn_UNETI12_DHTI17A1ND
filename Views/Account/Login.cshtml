@@ -1,6 +1,6 @@
 @*
-    Họ và tên: [Điền họ tên của bạn]
-    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
     Nội dung thực hiện: Module 1 - View Đăng nhập
 *@
 @model QuanLyDeTaiDoAn.ViewModels.LoginViewModel
@@ -13,6 +13,11 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h3 class="card-title text-center mb-4">Đăng nhập hệ thống</h3>
+
+                @if (ViewBag.ThongBaoPhien is string thongBaoPhien)
+                {
+                    <div class="alert alert-warning" role="alert">@thongBaoPhien</div>
+                }
 
                 <div asp-validation-summary="All" class="text-danger"></div>
 

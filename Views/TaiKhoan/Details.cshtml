@@ -1,6 +1,6 @@
 @*
-    Họ và tên: [Điền họ tên của bạn]
-    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
     Nội dung thực hiện: Module 1 - View chi tiết tài khoản
 *@
 @model QuanLyDeTaiDoAn.Models.TaiKhoan
@@ -11,16 +11,16 @@
 <h3>Chi tiết tài khoản</h3>
 
 <dl class="row">
-    <dt class="col-sm-3">Tên đăng nhập</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.TenDangNhap)</dt>
     <dd class="col-sm-9">@Model.TenDangNhap</dd>
 
-    <dt class="col-sm-3">Họ và tên</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.HoTen)</dt>
     <dd class="col-sm-9">@Model.HoTen</dd>
 
-    <dt class="col-sm-3">Email</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Email)</dt>
     <dd class="col-sm-9">@Model.Email</dd>
 
-    <dt class="col-sm-3">Vai trò</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.VaiTro)</dt>
     <dd class="col-sm-9">@Model.VaiTro</dd>
 
     <dt class="col-sm-3">Trạng thái</dt>

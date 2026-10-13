@@ -1,7 +1,6 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
-
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập, thêm/sửa tài khoản và đổi mật khẩu
 using System.ComponentModel.DataAnnotations;
 using QuanLyDeTaiDoAn.Helpers;
 
@@ -24,7 +23,8 @@ namespace QuanLyDeTaiDoAn.ViewModels
     public class TaiKhoanCreateViewModel
     {
         [Required(ErrorMessage = "Vui lòng nhập tên đăng nhập")]
-        [StringLength(50)]
+        [StringLength(50, ErrorMessage = "Tên đăng nhập tối đa 50 ký tự")]
+        [RegularExpression(@"^[A-Za-z0-9_.]+$", ErrorMessage = "Tên đăng nhập chỉ gồm chữ không dấu, số, dấu chấm và gạch dưới")]
         [Display(Name = "Tên đăng nhập")]
         public string TenDangNhap { get; set; } = string.Empty;
 
@@ -35,12 +35,14 @@ namespace QuanLyDeTaiDoAn.ViewModels
         public string MatKhau { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập họ tên")]
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Họ tên tối đa 100 ký tự")]
         [Display(Name = "Họ và tên")]
         public string HoTen { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập email")]
         [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        [StringLength(100, ErrorMessage = "Email tối đa 100 ký tự")]
+        [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng chọn vai trò")]
@@ -60,12 +62,14 @@ namespace QuanLyDeTaiDoAn.ViewModels
         public string TenDangNhap { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập họ tên")]
-        [StringLength(100)]
+        [StringLength(100, ErrorMessage = "Họ tên tối đa 100 ký tự")]
         [Display(Name = "Họ và tên")]
         public string HoTen { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập email")]
         [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
+        [StringLength(100, ErrorMessage = "Email tối đa 100 ký tự")]
+        [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng chọn vai trò")]

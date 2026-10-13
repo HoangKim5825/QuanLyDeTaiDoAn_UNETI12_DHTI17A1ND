@@ -1,18 +1,19 @@
 @*
-    Họ và tên: [Điền họ tên của bạn]
-    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
     Nội dung thực hiện: Module 1 - View sửa tài khoản
 *@
 @model QuanLyDeTaiDoAn.ViewModels.TaiKhoanEditViewModel
 @{
     ViewData["Title"] = "Sửa tài khoản";
+    bool laToi = (ViewBag.LaChinhMinh as bool?) == true;
 }
 
 <h3>Sửa thông tin tài khoản</h3>
 
 <div asp-validation-summary="All" class="text-danger"></div>
 
-<form asp-action="Edit" method="post" class="col-md-6">
+<form asp-action="Edit" asp-route-id="@Model.MaTaiKhoan" method="post" class="col-md-6">
     <input type="hidden" asp-for="MaTaiKhoan" />
 
     <div class="mb-3">
@@ -32,19 +33,40 @@
         <span asp-validation-for="Email" class="text-danger"></span>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="VaiTro" class="form-label"></label>
-        <select asp-for="VaiTro" class="form-select">
-            <option value="Admin">Admin</option>
-            <option value="SinhVien">Sinh viên</option>
-        </select>
-        <div class="form-text">Không thể đổi sang vai trò khác nếu tài khoản đã có hồ sơ Sinh viên liên kết.</div>
-    </div>
+    @if (laToi)
+    {
+        <div class="alert alert-info">
+            Bạn đang sửa <b>chính tài khoản đang đăng nhập</b>: không thể tự khóa hoặc tự đổi vai trò.
+        </div>
+        <input type="hidden" asp-for="VaiTro" />
+        <input type="hidden" asp-for="TrangThai" />
 
-    <div class="mb-3 form-check">
-        <input asp-for="TrangThai" class="form-check-input" />
-        <label asp-for="TrangThai" class="form-check-label"></label>
-    </div>
+        <div class="mb-3">
+            <label asp-for="VaiTro" class="form-label"></label>
+            <input class="form-control" value="@Model.VaiTro" disabled />
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" checked disabled />
+            <label asp-for="TrangThai" class="form-check-label"></label>
+        </div>
+    }
+    else
+    {
+        <div class="mb-3">
+            <label asp-for="VaiTro" class="form-label"></label>
+            <select asp-for="VaiTro" class="form-select">
+                <option value="Admin">Admin</option>
+                <option value="SinhVien">Sinh viên</option>
+            </select>
+            <span asp-validation-for="VaiTro" class="text-danger"></span>
+            <div class="form-text">Không thể đổi sang vai trò khác nếu tài khoản đã có hồ sơ Sinh viên liên kết.</div>
+        </div>
+
+        <div class="mb-3 form-check">
+            <input asp-for="TrangThai" class="form-check-input" />
+            <label asp-for="TrangThai" class="form-check-label"></label>
+        </div>
+    }
 
     <button type="submit" class="btn btn-primary">Lưu</button>
     <a class="btn btn-secondary" asp-action="Index">Hủy</a>

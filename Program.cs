@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Services;
+using QuanLyDeTaiDoAn.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseSession();
+app.UseMiddleware<KiemTraPhienDangNhapMiddleware>();
+
 
 app.UseAuthorization();
 

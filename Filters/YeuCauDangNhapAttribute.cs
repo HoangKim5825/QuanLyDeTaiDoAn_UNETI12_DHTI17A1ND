@@ -1,7 +1,6 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
-
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - Filter bắt buộc đăng nhập (kiểm tra Session) cho Controller/Action
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
