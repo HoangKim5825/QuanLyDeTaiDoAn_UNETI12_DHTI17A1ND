@@ -1,11 +1,12 @@
-// Họ và tên: <Nguyen Quang Huy>
-// Mã sinh viên: <23203100080>
+// Họ và tên: <ĐIỀN TÊN>
+// Mã sinh viên: <ĐIỀN MÃ SV>
 // Nội dung thực hiện: Quản lý đề tài - CRUD, tìm kiếm, lọc, sắp xếp, phân trang (Module 2)
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Constants;
+using QuanLyDeTaiDoAn.Filters;   // nếu M1 đặt attribute ở namespace khác thì sửa dòng này
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Extensions;
 using QuanLyDeTaiDoAn.Models;
@@ -13,13 +14,11 @@ using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
+    [YeuCauDangNhap]
     public class DeTaiController : Controller
     {
         private readonly ApplicationDbContext _context;
-
-        // TODO (GĐ 6): đổi thành false khi M1 merge phần đăng nhập/phân quyền,
-        // hoặc thay LaAdmin() bằng filter/helper dùng chung của M1.
-        private static readonly bool TamBoQuaKiemTraQuyen = true;
+        private readonly IWebHostEnvironment _env;
 
         // Trạng thái được chọn tay. "DuSoLuong" KHÔNG cho chọn vì được suy ra từ SoChoCon.
         private static readonly string[] TrangThaiChoPhep =
@@ -29,18 +28,10 @@ namespace QuanLyDeTaiDoAn.Controllers
             TrangThaiConst.DeTaiTT.KetThuc
         };
 
-        public DeTaiController(ApplicationDbContext context)
+        public DeTaiController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
-        }
-
-        private bool LaAdmin() =>
-            TamBoQuaKiemTraQuyen || HttpContext.Session.GetString("VaiTro") == "Admin";
-
-        private IActionResult TuChoiQuyen()
-        {
-            TempData["Loi"] = "Bạn không có quyền thực hiện thao tác này.";
-            return RedirectToAction(nameof(Index));
+            _env = env;
         }
 
         // =====================================================================
@@ -87,10 +78,9 @@ namespace QuanLyDeTaiDoAn.Controllers
         // =====================================================================
         // CREATE
         // =====================================================================
+        [YeuCauAdmin]
         public async Task<IActionResult> Create()
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var deTai = new DeTai
             {
                 NamHoc = DateTime.Now.Year,
@@ -104,14 +94,15 @@ namespace QuanLyDeTaiDoAn.Controllers
             return View(deTai);
         }
 
+        [YeuCauAdmin]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            [Bind("TenDeTai,MaLinhVuc,MoTa,YeuCau,SoSinhVienToiDa,NamHoc,HocKy,TrangThai")] DeTai deTai)
+            [Bind("TenDeTai,MaLinhVuc,MoTa,YeuCau,SoSinhVienToiDa,NamHoc,HocKy,TrangThai")] DeTai deTai,
+            IFormFile? fileMoTa)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             await KiemTraNghiepVuAsync(deTai, null);
+            await KiemTraFileAsync(fileMoTa);
 
             if (!ModelState.IsValid)
             {
@@ -119,8 +110,25 @@ namespace QuanLyDeTaiDoAn.Controllers
                 return View(deTai);
             }
 
+            if (fileMoTa is { Length: > 0 })
+            {
+                deTai.TenFileMoTa = FileMoTaHelper.TenHienThi(fileMoTa.FileName);
+                deTai.TenFileLuu = await FileMoTaHelper.LuuAsync(fileMoTa, _env);
+            }
+
             _context.DeTais.Add(deTai);
-            await _context.SaveChangesAsync();
+            try { await _context.SaveChangesAsync(); }
+            catch (DbUpdateException ex)
+            {
+                FileMoTaHelper.Xoa(_env, deTai.TenFileLuu);   // lỗi DB thì không để lại file mồ côi
+                if (!LaLoiTrung(ex)) throw;
+                // Hai người lưu cùng lúc: vượt qua kiểm tra LINQ nhưng bị unique index chặn
+                ModelState.AddModelError(nameof(deTai.TenDeTai), "Đã có đề tài cùng tên trong năm học và học kỳ này.");
+                deTai.TenFileMoTa = null;
+                deTai.TenFileLuu = null;
+                await NapDropdownFormAsync(deTai.MaLinhVuc);
+                return View(deTai);
+            }
             TempData["ThongBao"] = $"Đã thêm đề tài \"{deTai.TenDeTai}\".";
             return RedirectToAction(nameof(Index));
         }
@@ -128,9 +136,9 @@ namespace QuanLyDeTaiDoAn.Controllers
         // =====================================================================
         // EDIT
         // =====================================================================
+        [YeuCauAdmin]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
             if (id == null) return NotFound();
 
             var deTai = await _context.DeTais.AsNoTracking().FirstOrDefaultAsync(d => d.MaDeTai == id);
@@ -145,18 +153,20 @@ namespace QuanLyDeTaiDoAn.Controllers
             return View(deTai);
         }
 
+        [YeuCauAdmin]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id,
-            [Bind("MaDeTai,TenDeTai,MaLinhVuc,MoTa,YeuCau,SoSinhVienToiDa,NamHoc,HocKy,TrangThai")] DeTai input)
+            [Bind("MaDeTai,TenDeTai,MaLinhVuc,MoTa,YeuCau,SoSinhVienToiDa,NamHoc,HocKy,TrangThai")] DeTai input,
+            IFormFile? fileMoTa, bool xoaFile = false)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
             if (id != input.MaDeTai) return NotFound();
 
             var deTai = await _context.DeTais.FindAsync(id);
             if (deTai == null) return NotFound();
 
             await KiemTraNghiepVuAsync(input, id);
+            await KiemTraFileAsync(fileMoTa);
 
             // Không cho giảm sức chứa thấp hơn số đăng ký đã duyệt
             int soDaDuyet = await _context.DangKyDeTais.DangKyHopLe().CountAsync(x => x.MaDeTai == id);
@@ -167,6 +177,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.SoDaDuyet = soDaDuyet;
+                input.TenFileMoTa = deTai.TenFileMoTa;   // để View còn hiển thị file hiện tại
                 await NapDropdownFormAsync(input.MaLinhVuc);
                 return View(input);
             }
@@ -181,7 +192,35 @@ namespace QuanLyDeTaiDoAn.Controllers
             deTai.HocKy = input.HocKy;
             deTai.TrangThai = input.TrangThai;
 
-            await _context.SaveChangesAsync();
+            string? fileCu = deTai.TenFileLuu;
+            string? tenGocCu = deTai.TenFileMoTa;
+            string? fileMoi = null;
+            if (fileMoTa is { Length: > 0 })             // thay file
+            {
+                fileMoi = await FileMoTaHelper.LuuAsync(fileMoTa, _env);
+                deTai.TenFileMoTa = FileMoTaHelper.TenHienThi(fileMoTa.FileName);
+                deTai.TenFileLuu = fileMoi;
+            }
+            else if (xoaFile)                            // chỉ xóa file
+            {
+                deTai.TenFileMoTa = null;
+                deTai.TenFileLuu = null;
+            }
+
+            try { await _context.SaveChangesAsync(); }
+            catch (DbUpdateException ex)
+            {
+                FileMoTaHelper.Xoa(_env, fileMoi);
+                if (!LaLoiTrung(ex)) throw;
+                ModelState.AddModelError(nameof(input.TenDeTai), "Đã có đề tài cùng tên trong năm học và học kỳ này.");
+                input.TenFileMoTa = tenGocCu;
+                ViewBag.SoDaDuyet = soDaDuyet;
+                await NapDropdownFormAsync(input.MaLinhVuc);
+                return View(input);
+            }
+
+            // Lưu DB thành công rồi mới xóa file cũ trên đĩa
+            if (fileCu != null && fileCu != deTai.TenFileLuu) FileMoTaHelper.Xoa(_env, fileCu);
             TempData["ThongBao"] = $"Đã cập nhật đề tài \"{deTai.TenDeTai}\".";
             return RedirectToAction(nameof(Index));
         }
@@ -189,12 +228,11 @@ namespace QuanLyDeTaiDoAn.Controllers
         // =====================================================================
         // DELETE (POST) - không xóa nếu đã có đăng ký để bảo toàn lịch sử
         // =====================================================================
+        [YeuCauAdmin]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var deTai = await _context.DeTais.FindAsync(id);
             if (deTai == null) return NotFound();
 
@@ -208,6 +246,7 @@ namespace QuanLyDeTaiDoAn.Controllers
 
             _context.DeTais.Remove(deTai);
             await _context.SaveChangesAsync();
+            FileMoTaHelper.Xoa(_env, deTai.TenFileLuu);
             TempData["ThongBao"] = $"Đã xóa đề tài \"{deTai.TenDeTai}\".";
             return RedirectToAction(nameof(Index));
         }
@@ -215,6 +254,17 @@ namespace QuanLyDeTaiDoAn.Controllers
         // =====================================================================
         // Hàm hỗ trợ
         // =====================================================================
+
+        // Vi phạm unique index của SQL Server (mã lỗi 2601 hoặc 2627)
+        private static bool LaLoiTrung(DbUpdateException ex) =>
+            ex.InnerException is Microsoft.Data.SqlClient.SqlException { Number: 2601 or 2627 };
+
+        private async Task KiemTraFileAsync(IFormFile? file)
+        {
+            if (file == null || file.Length == 0) return;
+            var loi = await FileMoTaHelper.KiemTraAsync(file);
+            if (loi != null) ModelState.AddModelError("fileMoTa", loi);
+        }
 
         // Kiểm tra nghiệp vụ phụ thuộc DB (LINQ). maDangSua = null khi Create.
         private async Task KiemTraNghiepVuAsync(DeTai dt, int? maDangSua)
@@ -305,11 +355,27 @@ namespace QuanLyDeTaiDoAn.Controllers
             return items;
         }
 
+        // ===== TẢI FILE MÔ TẢ (nâng cao) =====
+        // File nằm ngoài wwwroot, chỉ tải được qua action này và phải đăng nhập.
+        public async Task<IActionResult> TaiFile(int id)
+        {
+            var f = await _context.DeTais.AsNoTracking()
+                .Where(d => d.MaDeTai == id)
+                .Select(d => new { d.TenFileMoTa, d.TenFileLuu })
+                .FirstOrDefaultAsync();
+            if (f?.TenFileLuu == null) return NotFound();
+
+            var path = FileMoTaHelper.DuongDan(_env, f.TenFileLuu);
+            if (!System.IO.File.Exists(path)) return NotFound();
+
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return PhysicalFile(path, FileMoTaHelper.LoaiNoiDung(f.TenFileLuu), f.TenFileMoTa ?? f.TenFileLuu);
+        }
+
         // ===== XUẤT EXCEL (nâng cao): xuất đúng danh sách đang tìm kiếm/lọc/sắp xếp =====
+        [YeuCauAdmin]
         public async Task<IActionResult> ExportExcel(DeTaiFilterViewModel vm)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var ds = await LocDeTai(vm).ToListAsync();
             var bytes = ExcelHelper.XuatDeTai(ds);
             return File(bytes,
