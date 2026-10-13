@@ -1,5 +1,5 @@
 // Họ và tên: <Nguyen Quang Huy>
-// Mã sinh viên: <232031000800>
+// Mã sinh viên: <23213100080>
 // Nội dung thực hiện: Bổ sung Display và thông báo lỗi tiếng Việt cho Entity DeTai (Module 2)
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -26,6 +26,14 @@ namespace QuanLyDeTaiDoAn.Models
 
         [Display(Name = "Yêu cầu")]
         public string? YeuCau { get; set; }
+
+        // File mô tả đề tài (nâng cao). Cả hai cột đều nullable nên dữ liệu cũ không bị ảnh hưởng.
+        [StringLength(255)]
+        [Display(Name = "File mô tả")]
+        public string? TenFileMoTa { get; set; }   // tên gốc, để hiển thị khi tải về
+
+        [StringLength(100)]
+        public string? TenFileLuu { get; set; }    // tên ngẫu nhiên đã lưu trên đĩa
 
         [Range(1, int.MaxValue, ErrorMessage = "Số sinh viên tối đa phải lớn hơn 0")]
         [Display(Name = "Số sinh viên tối đa")]

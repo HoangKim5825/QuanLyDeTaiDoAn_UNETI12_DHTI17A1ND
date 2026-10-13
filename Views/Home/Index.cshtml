@@ -1,8 +1,146 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@*
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
+    Nội dung thực hiện: Module 1 - Trang chủ điều hướng đúng chức năng theo vai trò (Admin, Sinh viên, chưa đăng nhập)
+*@
+@using Microsoft.AspNetCore.Http
+@{
+    ViewData["Title"] = "Trang chủ";
+
+    // Vai trò và họ tên được server ghi vào Session lúc đăng nhập (và được middleware đồng bộ lại với CSDL)
+    var vaiTro = Context.Session.GetString("VaiTro");
+    var hoTen = Context.Session.GetString("HoTen");
+    bool daDangNhap = !string.IsNullOrEmpty(vaiTro);
+    bool laAdmin = vaiTro == "Admin";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<partial name="_ThongBao" />
+
+@if (!daDangNhap)
+{
+    <div class="p-5 mb-4 bg-light rounded-3 text-center">
+        <h1 class="display-6">Hệ thống quản lý đề tài đồ án</h1>
+        <p class="lead text-muted">và phân công giảng viên hướng dẫn</p>
+        <p>Vui lòng đăng nhập để sử dụng các chức năng của hệ thống.</p>
+        <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+    </div>
+}
+else
+{
+    <div class="p-4 mb-4 bg-light rounded-3">
+        <h2 class="h3 mb-1">Xin chào, @hoTen</h2>
+        <p class="mb-0 text-muted">
+            Bạn đang đăng nhập với vai trò
+            <span class="badge @(laAdmin ? "bg-danger" : "bg-info text-dark")">@(laAdmin ? "Quản trị viên (Admin)" : "Sinh viên")</span>
+        </p>
+    </div>
+
+    if (laAdmin)
+    {
+        <h3 class="h5 text-muted mt-4 mb-3">Quản trị hệ thống</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Quản lý tài khoản</h4>
+                        <p class="card-text text-muted">Thêm, sửa, khóa/mở khóa, đặt lại mật khẩu và phân quyền tài khoản.</p>
+                        <a class="btn btn-outline-primary" asp-controller="TaiKhoan" asp-action="Index">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Quản lý lĩnh vực</h4>
+                        <p class="card-text text-muted">Danh mục lĩnh vực dùng cho giảng viên và đề tài đồ án.</p>
+                        <a class="btn btn-outline-primary" asp-controller="LinhVuc" asp-action="Index">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="h5 text-muted mt-4 mb-3">Giảng viên và đề tài</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Quản lý giảng viên</h4>
+                        <p class="card-text text-muted">Hồ sơ giảng viên, lĩnh vực chuyên môn và số sinh viên hướng dẫn tối đa.</p>
+                        <a class="btn btn-outline-primary" asp-controller="GiangVien" asp-action="Index">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Quản lý đề tài</h4>
+                        <p class="card-text text-muted">Tạo, chỉnh sửa, tìm kiếm và theo dõi trạng thái đề tài đồ án.</p>
+                        <a class="btn btn-outline-primary" asp-controller="DeTai" asp-action="Index">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="h5 text-muted mt-4 mb-3">Duyệt đăng ký và phân công</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Đăng ký chờ duyệt</h4>
+                        <p class="card-text text-muted">Xem và duyệt các đăng ký đề tài của sinh viên.</p>
+                        <a class="btn btn-outline-primary" asp-controller="PhanCongHuongDan" asp-action="DanhSachChoDuyet">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Phân công giảng viên hướng dẫn</h4>
+                        <p class="card-text text-muted">Phân công hoặc thay đổi GVHD cho các đăng ký đã duyệt.</p>
+                        <a class="btn btn-outline-primary" asp-controller="PhanCongHuongDan" asp-action="DanhSachChoDuyet" asp-route-trangThai="DaDuyet">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="h5 text-muted mt-4 mb-3">Báo cáo</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Dashboard</h4>
+                        <p class="card-text text-muted">Tổng quan nhanh tình hình đăng ký và phân công.</p>
+                        <a class="btn btn-outline-primary" asp-controller="ThongKe" asp-action="Dashboard">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Thống kê</h4>
+                        <p class="card-text text-muted">Thống kê chi tiết theo lĩnh vực, giảng viên và trạng thái.</p>
+                        <a class="btn btn-outline-primary" asp-controller="ThongKe" asp-action="Index">Mở chức năng</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <h3 class="h5 text-muted mt-4 mb-3">Chức năng dành cho sinh viên</h3>
+        <div class="row g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h4 class="h5 card-title">Danh sách đề tài</h4>
+                        <p class="card-text text-muted">Xem các đề tài đang mở, lọc theo lĩnh vực và xem chi tiết yêu cầu của từng đề tài.</p>
+                        <a class="btn btn-outline-primary" asp-controller="DeTai" asp-action="Index">Xem đề tài</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted small mt-3">
+            Các chức năng quản trị (tài khoản, lĩnh vực, giảng viên, duyệt và phân công, thống kê) chỉ dành cho Admin.
+        </p>
+    }
+}

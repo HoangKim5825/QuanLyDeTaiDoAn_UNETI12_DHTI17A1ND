@@ -1,7 +1,6 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
-
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - TaiKhoanController: CRUD tài khoản, khóa/mở khóa, đổi mật khẩu, chống Admin tự khóa mình
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Data;
@@ -22,6 +21,12 @@ namespace QuanLyDeTaiDoAn.Controllers
             _context = context;
         }
 
+        // Mã tài khoản đang đăng nhập (lấy từ Session do server ghi lúc đăng nhập)
+        private int? MaTaiKhoanHienTai =>
+            HttpContext.Session.GetInt32(YeuCauDangNhapAttribute.SessionMaTaiKhoan);
+
+        private bool LaChinhMinh(int id) => MaTaiKhoanHienTai == id;
+
         public IActionResult Index(string? keyword)
         {
             var query = _context.TaiKhoans.AsQueryable();
@@ -36,6 +41,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             }
 
             ViewBag.Keyword = keyword;
+            ViewBag.MaTaiKhoanHienTai = MaTaiKhoanHienTai;
             var list = query.OrderBy(t => t.HoTen).ToList();
             return View(list);
         }
@@ -80,7 +86,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             _context.TaiKhoans.Add(taiKhoan);
             _context.SaveChanges();
 
-            TempData["Success"] = "Thêm tài khoản thành công.";
+            TempData["ThongBao"] = "Thêm tài khoản thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -98,6 +104,7 @@ namespace QuanLyDeTaiDoAn.Controllers
                 VaiTro = taiKhoan.VaiTro,
                 TrangThai = taiKhoan.TrangThai
             };
+            ViewBag.LaChinhMinh = LaChinhMinh(id);
             return View(vm);
         }
 
@@ -116,8 +123,20 @@ namespace QuanLyDeTaiDoAn.Controllers
             if (daLaSinhVien && model.VaiTro != VaiTroTaiKhoan.SinhVien)
                 ModelState.AddModelError(nameof(model.VaiTro), "Tài khoản đã gắn hồ sơ Sinh viên, không thể đổi sang vai trò khác.");
 
+            // Admin không được tự khóa hoặc tự hạ quyền chính mình (sẽ tự mất quyền quản trị)
+            if (LaChinhMinh(id))
+            {
+                if (!model.TrangThai)
+                    ModelState.AddModelError(nameof(model.TrangThai), "Bạn không thể tự khóa tài khoản đang đăng nhập.");
+                if (model.VaiTro != VaiTroTaiKhoan.Admin)
+                    ModelState.AddModelError(nameof(model.VaiTro), "Bạn không thể tự đổi vai trò của tài khoản đang đăng nhập.");
+            }
+
             if (!ModelState.IsValid)
+            {
+                ViewBag.LaChinhMinh = LaChinhMinh(id);
                 return View(model);
+            }
 
             var taiKhoan = _context.TaiKhoans.FirstOrDefault(t => t.MaTaiKhoan == id);
             if (taiKhoan == null) return NotFound();
@@ -128,7 +147,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             taiKhoan.TrangThai = model.TrangThai;
 
             _context.SaveChanges();
-            TempData["Success"] = "Cập nhật tài khoản thành công.";
+            TempData["ThongBao"] = "Cập nhật tài khoản thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -139,10 +158,17 @@ namespace QuanLyDeTaiDoAn.Controllers
             var taiKhoan = _context.TaiKhoans.FirstOrDefault(t => t.MaTaiKhoan == id);
             if (taiKhoan == null) return NotFound();
 
+            // Chặn Admin tự khóa chính mình (nếu không sẽ bị đăng xuất và có thể không còn Admin nào đăng nhập được)
+            if (LaChinhMinh(id))
+            {
+                TempData["Loi"] = "Bạn không thể tự khóa tài khoản đang đăng nhập.";
+                return RedirectToAction(nameof(Index));
+            }
+
             taiKhoan.TrangThai = !taiKhoan.TrangThai;
             _context.SaveChanges();
 
-            TempData["Success"] = taiKhoan.TrangThai ? "Đã mở khóa tài khoản." : "Đã khóa tài khoản.";
+            TempData["ThongBao"] = taiKhoan.TrangThai ? "Đã mở khóa tài khoản." : "Đã khóa tài khoản.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -152,6 +178,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             if (taiKhoan == null) return NotFound();
 
             ViewBag.CoHoSoSinhVien = _context.SinhViens.Any(s => s.MaTaiKhoan == id);
+            ViewBag.LaChinhMinh = LaChinhMinh(id);
             return View(taiKhoan);
         }
 
@@ -162,12 +189,18 @@ namespace QuanLyDeTaiDoAn.Controllers
             var taiKhoan = _context.TaiKhoans.FirstOrDefault(t => t.MaTaiKhoan == id);
             if (taiKhoan == null) return NotFound();
 
+            if (LaChinhMinh(id))
+            {
+                TempData["Loi"] = "Bạn không thể xóa tài khoản đang đăng nhập.";
+                return RedirectToAction(nameof(Index));
+            }
+
             // CHẶN CỨNG: không xóa tài khoản đã có hồ sơ Sinh viên liên kết (quan hệ 1-1 bắt buộc
             // do Module 3 quản lý) - xóa sẽ cascade xóa luôn hồ sơ SinhVien và có thể vướng FK
             // Restrict với DangKyDeTai, phá dữ liệu chung. Dùng "Khóa tài khoản" thay thế.
             if (_context.SinhViens.Any(s => s.MaTaiKhoan == id))
             {
-                TempData["Error"] = "Không thể xóa: tài khoản đã gắn hồ sơ Sinh viên. " +
+                TempData["Loi"] = "Không thể xóa: tài khoản đã gắn hồ sơ Sinh viên. " +
                                      "Vui lòng dùng chức năng Khóa tài khoản thay vì xóa.";
                 return RedirectToAction(nameof(Index));
             }
@@ -176,12 +209,12 @@ namespace QuanLyDeTaiDoAn.Controllers
             {
                 _context.TaiKhoans.Remove(taiKhoan);
                 _context.SaveChanges();
-                TempData["Success"] = "Đã xóa tài khoản.";
+                TempData["ThongBao"] = "Đã xóa tài khoản.";
             }
             catch (DbUpdateException)
             {
                 // Lưới an toàn cuối cùng nếu còn ràng buộc khác chưa lường trước được
-                TempData["Error"] = "Không thể xóa tài khoản này vì đang được dữ liệu khác tham chiếu.";
+                TempData["Loi"] = "Không thể xóa tài khoản này vì đang được dữ liệu khác tham chiếu.";
             }
 
             return RedirectToAction(nameof(Index));
@@ -207,7 +240,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             taiKhoan.MatKhau = model.MatKhauMoi;
             _context.SaveChanges();
 
-            TempData["Success"] = "Đặt lại mật khẩu thành công.";
+            TempData["ThongBao"] = "Đặt lại mật khẩu thành công.";
             return RedirectToAction(nameof(Index));
         }
     }

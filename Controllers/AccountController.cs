@@ -1,8 +1,6 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
-
-
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - AccountController: đăng nhập, đăng xuất, từ chối truy cập (dùng Session)
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Filters;
@@ -20,10 +18,19 @@ namespace QuanLyDeTaiDoAn.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(string? returnUrl = null)
+        public IActionResult Login(string? returnUrl = null, string? lyDo = null)
         {
+            // Đã đăng nhập rồi thì về trang chủ (middleware đã loại bỏ Session của tài khoản bị khóa/xóa)
             if (HttpContext.Session.GetInt32(YeuCauDangNhapAttribute.SessionMaTaiKhoan) != null)
                 return RedirectToAction("Index", "Home");
+
+            // Lý do bị đăng xuất giữa chừng (do KiemTraPhienDangNhapMiddleware chuyển về)
+            ViewBag.ThongBaoPhien = lyDo switch
+            {
+                "biKhoa" => "Tài khoản của bạn đã bị khóa nên phiên đăng nhập đã kết thúc. Vui lòng liên hệ quản trị viên.",
+                "khongTonTai" => "Tài khoản của bạn không còn tồn tại trong hệ thống.",
+                _ => null
+            };
 
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
@@ -35,9 +42,11 @@ namespace QuanLyDeTaiDoAn.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            var tenDangNhap = model.TenDangNhap.Trim();
+
             // Dùng EF Core + LINQ để kiểm tra tài khoản trên bảng TaiKhoan dùng chung của nhóm
             var taiKhoan = _context.TaiKhoans
-                .FirstOrDefault(t => t.TenDangNhap == model.TenDangNhap);
+                .FirstOrDefault(t => t.TenDangNhap == tenDangNhap);
 
             if (taiKhoan == null)
             {
@@ -57,6 +66,8 @@ namespace QuanLyDeTaiDoAn.Controllers
                 return View(model);
             }
 
+            // Tạo phiên mới sạch rồi mới ghi thông tin (tránh sót dữ liệu của phiên trước)
+            HttpContext.Session.Clear();
             HttpContext.Session.SetInt32(YeuCauDangNhapAttribute.SessionMaTaiKhoan, taiKhoan.MaTaiKhoan);
             HttpContext.Session.SetString(YeuCauDangNhapAttribute.SessionHoTen, taiKhoan.HoTen);
             HttpContext.Session.SetString(YeuCauDangNhapAttribute.SessionVaiTro, taiKhoan.VaiTro);

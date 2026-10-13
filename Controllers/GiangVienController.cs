@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyDeTaiDoAn.Constants;
+using QuanLyDeTaiDoAn.Filters;   // nếu M1 đặt attribute ở namespace khác thì sửa dòng này
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Extensions;
 using QuanLyDeTaiDoAn.Models;
@@ -13,33 +14,19 @@ using QuanLyDeTaiDoAn.ViewModels;
 
 namespace QuanLyDeTaiDoAn.Controllers
 {
+    [YeuCauAdmin]
     public class GiangVienController : Controller
     {
         private readonly ApplicationDbContext _context;
-
-        // TODO (GĐ 6): đổi thành false khi M1 merge phân quyền, hoặc thay LaAdmin() bằng helper của M1.
-        private static readonly bool TamBoQuaKiemTraQuyen = true;
 
         public GiangVienController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // Toàn bộ chức năng quản lý giảng viên chỉ dành cho Admin
-        private bool LaAdmin() =>
-            TamBoQuaKiemTraQuyen || HttpContext.Session.GetString("VaiTro") == "Admin";
-
-        private IActionResult TuChoiQuyen()
-        {
-            TempData["Loi"] = "Bạn không có quyền thực hiện thao tác này.";
-            return RedirectToAction("Index", "DeTai");
-        }
-
         // ===== INDEX: tìm kiếm + lọc =====
         public async Task<IActionResult> Index(GiangVienFilterViewModel vm)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var items = LocGiangVien(vm);
 
             vm.KetQua = await items.OrderBy(x => x.HoTen).ThenBy(x => x.MaGiangVien).ToListAsync();
@@ -57,7 +44,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         // ===== DETAILS =====
         public async Task<IActionResult> Details(int? id)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
             if (id == null) return NotFound();
 
             var gv = await _context.GiangViens.AsNoTracking()
@@ -79,8 +65,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         // ===== CREATE =====
         public async Task<IActionResult> Create()
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var gv = new GiangVien
             {
                 SoSinhVienHuongDanToiDa = 3,
@@ -97,8 +81,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         public async Task<IActionResult> Create(
             [Bind("HoTen,HocVi,Email,SoDienThoai,MaLinhVuc,SoSinhVienHuongDanToiDa,TrangThai")] GiangVien gv)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             await KiemTraNghiepVuAsync(gv, null);
 
             if (!ModelState.IsValid)
@@ -116,7 +98,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         // ===== EDIT =====
         public async Task<IActionResult> Edit(int? id)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
             if (id == null) return NotFound();
 
             var gv = await _context.GiangViens.AsNoTracking().FirstOrDefaultAsync(g => g.MaGiangVien == id);
@@ -132,7 +113,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         public async Task<IActionResult> Edit(int id,
             [Bind("MaGiangVien,HoTen,HocVi,Email,SoDienThoai,MaLinhVuc,SoSinhVienHuongDanToiDa,TrangThai")] GiangVien input)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
             if (id != input.MaGiangVien) return NotFound();
 
             var gv = await _context.GiangViens.FindAsync(id);
@@ -171,8 +151,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var gv = await _context.GiangViens.FindAsync(id);
             if (gv == null) return NotFound();
 
@@ -218,8 +196,6 @@ namespace QuanLyDeTaiDoAn.Controllers
         // ===== XUẤT EXCEL (nâng cao): xuất đúng danh sách đang lọc =====
         public async Task<IActionResult> ExportExcel(GiangVienFilterViewModel vm)
         {
-            if (!LaAdmin()) return TuChoiQuyen();
-
             var ds = await LocGiangVien(vm).OrderBy(x => x.HoTen).ThenBy(x => x.MaGiangVien).ToListAsync();
             var bytes = ExcelHelper.XuatGiangVien(ds);
             return File(bytes,

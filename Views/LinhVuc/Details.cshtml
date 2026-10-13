@@ -1,6 +1,6 @@
 @*
-    Họ và tên: [Điền họ tên của bạn]
-    Mã sinh viên: [Điền mã sinh viên của bạn]
+    Họ và tên: Nguyễn Minh Đức
+    Mã sinh viên: 23203100078
     Nội dung thực hiện: Module 1 - View chi tiết lĩnh vực
 *@
 @model QuanLyDeTaiDoAn.Models.LinhVuc
@@ -11,10 +11,10 @@
 <h3>Chi tiết lĩnh vực</h3>
 
 <dl class="row">
-    <dt class="col-sm-3">Tên lĩnh vực</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.TenLinhVuc)</dt>
     <dd class="col-sm-9">@Model.TenLinhVuc</dd>
 
-    <dt class="col-sm-3">Mô tả</dt>
+    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.MoTa)</dt>
     <dd class="col-sm-9">@Model.MoTa</dd>
 
     <dt class="col-sm-3">Trạng thái</dt>

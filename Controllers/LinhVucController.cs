@@ -1,7 +1,6 @@
 // Họ và tên: Nguyễn Minh Đức
-// Mã sinh viên: [23203100078]
-// Nội dung thực hiện: Module 1 - ViewModel cho đăng nhập và quản lý tài khoản
-
+// Mã sinh viên: 23203100078
+// Nội dung thực hiện: Module 1 - LinhVucController: CRUD lĩnh vực, kiểm tra ràng buộc Giảng viên/Đề tài trước khi xóa
 using Microsoft.AspNetCore.Mvc;
 using QuanLyDeTaiDoAn.Data;
 using QuanLyDeTaiDoAn.Filters;
@@ -50,6 +49,9 @@ namespace QuanLyDeTaiDoAn.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(LinhVuc model)
         {
+            model.TenLinhVuc = model.TenLinhVuc?.Trim() ?? string.Empty;
+            model.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
+
             if (_context.LinhVucs.Any(l => l.TenLinhVuc == model.TenLinhVuc))
                 ModelState.AddModelError(nameof(model.TenLinhVuc), "Tên lĩnh vực đã tồn tại.");
 
@@ -66,7 +68,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             _context.LinhVucs.Add(linhVuc);
             _context.SaveChanges();
 
-            TempData["Success"] = "Thêm lĩnh vực thành công.";
+            TempData["ThongBao"] = "Thêm lĩnh vực thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -83,6 +85,9 @@ namespace QuanLyDeTaiDoAn.Controllers
         {
             if (id != model.MaLinhVuc) return NotFound();
 
+            model.TenLinhVuc = model.TenLinhVuc?.Trim() ?? string.Empty;
+            model.MoTa = string.IsNullOrWhiteSpace(model.MoTa) ? null : model.MoTa.Trim();
+
             if (_context.LinhVucs.Any(l => l.TenLinhVuc == model.TenLinhVuc && l.MaLinhVuc != id))
                 ModelState.AddModelError(nameof(model.TenLinhVuc), "Tên lĩnh vực đã tồn tại.");
 
@@ -96,7 +101,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             item.TrangThai = model.TrangThai;
 
             _context.SaveChanges();
-            TempData["Success"] = "Cập nhật lĩnh vực thành công.";
+            TempData["ThongBao"] = "Cập nhật lĩnh vực thành công.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -124,7 +129,7 @@ namespace QuanLyDeTaiDoAn.Controllers
 
             if (dangDuocSuDung)
             {
-                TempData["Error"] = "Không thể xóa: lĩnh vực đang được Giảng viên hoặc Đề tài sử dụng. " +
+                TempData["Loi"] = "Không thể xóa: lĩnh vực đang được Giảng viên hoặc Đề tài sử dụng. " +
                                      "Bạn có thể chuyển Trạng thái sang \"Ngừng áp dụng\" thay vì xóa.";
                 return RedirectToAction(nameof(Index));
             }
@@ -132,7 +137,7 @@ namespace QuanLyDeTaiDoAn.Controllers
             _context.LinhVucs.Remove(item);
             _context.SaveChanges();
 
-            TempData["Success"] = "Đã xóa lĩnh vực.";
+            TempData["ThongBao"] = "Đã xóa lĩnh vực.";
             return RedirectToAction(nameof(Index));
         }
     }
