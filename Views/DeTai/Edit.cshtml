@@ -1,6 +1,6 @@
 @*
-    Họ và tên: <Nguyen Quang Huy>
-    Mã sinh viên: <23203100080>
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
     Nội dung thực hiện: View sửa đề tài (Module 2)
 *@
 @model QuanLyDeTaiDoAn.Models.DeTai
@@ -19,7 +19,7 @@
     </div>
 }
 
-<form asp-action="Edit" asp-route-id="@Model.MaDeTai" method="post" class="card card-body">
+<form asp-action="Edit" asp-route-id="@Model.MaDeTai" method="post" enctype="multipart/form-data" class="card card-body">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <input type="hidden" asp-for="MaDeTai" />
 
@@ -33,4 +33,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Kiểm tra nhanh ở trình duyệt cho tiện. Máy chủ vẫn kiểm tra lại đầy đủ.
+        document.getElementById('fileMoTa').addEventListener('change', function () {
+            const f = this.files[0];
+            if (!f) return;
+            const duoi = f.name.split('.').pop().toLowerCase();
+            if (!['pdf', 'doc', 'docx'].includes(duoi)) {
+                alert('Chỉ chấp nhận file .pdf, .doc hoặc .docx.');
+                this.value = '';
+            } else if (f.size > 5 * 1024 * 1024) {
+                alert('File vượt quá 5 MB.');
+                this.value = '';
+            }
+        });
+    </script>
 }

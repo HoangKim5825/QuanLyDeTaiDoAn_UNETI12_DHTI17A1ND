@@ -1,6 +1,6 @@
 @*
-    Họ và tên: <Nguyen Quang Huy>
-    Mã sinh viên: <23203100080>
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
     Nội dung thực hiện: View chi tiết đề tài, hiển thị số chỗ tính toán (Module 2)
 *@
 @using Microsoft.AspNetCore.Http
@@ -11,8 +11,9 @@
     ViewData["Title"] = Model.DeTai.TenDeTai;
 
     // Chỉ để ẩn/hiện nút. Quyền thật sự được kiểm tra ở Controller.
-    // Nếu Session của M1 chưa có, tạm đặt: var laAdmin = true;
     var laAdmin = Context.Session.GetString("VaiTro") == "Admin";
+    var laSinhVien = Context.Session.GetString("VaiTro") == "SinhVien";
+    bool coTheDangKy = Model.DeTai.TrangThai == TrangThaiConst.DeTaiTT.MoDangKy && Model.SoChoCon > 0;
 
     string badgeTrangThai = Model.TrangThaiHienThi switch
     {
@@ -33,6 +34,21 @@
         @if (laAdmin)
         {
             <a asp-action="Edit" asp-route-id="@Model.DeTai.MaDeTai" class="btn btn-primary">Sửa</a>
+        }
+        @if (laSinhVien)
+        {
+            @* Điểm nối với M3: action và tên tham số phải khớp DangKyDeTaiController của SV3 *@
+            if (coTheDangKy)
+            {
+                <a asp-controller="DangKyDeTai" asp-action="Create" asp-route-maDeTai="@Model.DeTai.MaDeTai"
+                   class="btn btn-success">Đăng ký đề tài</a>
+            }
+            else
+            {
+                <button type="button" class="btn btn-secondary" disabled>
+                    @(Model.DeTai.TrangThai != TrangThaiConst.DeTaiTT.MoDangKy ? "Đề tài không mở đăng ký" : "Đã hết chỗ")
+                </button>
+            }
         }
     </div>
 </div>
@@ -56,6 +72,18 @@
 
         <dt class="col-sm-3">Số chỗ còn</dt>
         <dd class="col-sm-9"><span class="badge @badgeCho">@(Model.SoChoCon <= 0 ? "Hết chỗ" : Model.SoChoCon.ToString())</span></dd>
+
+        <dt class="col-sm-3">File mô tả</dt>
+        <dd class="col-sm-9">
+            @if (!string.IsNullOrEmpty(Model.DeTai.TenFileMoTa))
+            {
+                <a asp-action="TaiFile" asp-route-id="@Model.DeTai.MaDeTai">@Model.DeTai.TenFileMoTa</a>
+            }
+            else
+            {
+                <span class="text-muted">Không có</span>
+            }
+        </dd>
     </dl>
 </div>
 

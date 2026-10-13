@@ -1,6 +1,6 @@
 @*
-    Họ và tên: <Nguyen Quang Huy>
-    Mã sinh viên: <23203100080>
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
     Nội dung thực hiện: View danh sách đề tài - tìm kiếm, lọc, sắp xếp, phân trang, AJAX, xuất Excel (Module 2)
 *@
 @using Microsoft.AspNetCore.Http
@@ -10,7 +10,6 @@
     ViewData["Title"] = "Danh sách đề tài";
 
     // Chỉ để ẩn/hiện nút. Quyền thật sự được kiểm tra ở Controller.
-    // Nếu Session của M1 chưa có, tạm đặt: var laAdmin = true;
     var laAdmin = Context.Session.GetString("VaiTro") == "Admin";
 
     bool dangLoc = !string.IsNullOrWhiteSpace(Model.Keyword) || Model.MaLinhVuc.HasValue
@@ -116,6 +115,7 @@
                 const stt = ++yeuCauMoiNhat;
                 try {
                     const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (res.redirected) { window.location.href = res.url; return; }   // hết phiên đăng nhập
                     if (!res.ok) throw new Error(res.status);
                     const html = await res.text();
                     if (stt !== yeuCauMoiNhat) return;      // bỏ kết quả cũ nếu đã có yêu cầu mới hơn
