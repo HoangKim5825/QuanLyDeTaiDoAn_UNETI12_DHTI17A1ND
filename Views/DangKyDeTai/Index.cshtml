@@ -1,0 +1,87 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - Sinh viên theo dõi kết quả các đăng ký của chính mình, hủy đăng ký chờ duyệt
+*@
+@using QuanLyDeTaiDoAn.Helpers
+@model List<QuanLyDeTaiDoAn.ViewModels.DangKyCuaToiItem>
+@{
+    ViewData["Title"] = "Đăng ký của tôi";
+    string? loc = ViewBag.TrangThai as string;
+}
+
+<partial name="_ThongBao" />
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Đăng ký đề tài của tôi</h1>
+    <a asp-controller="DeTai" asp-action="Index" class="btn btn-primary">Xem danh sách đề tài</a>
+</div>
+
+@if (ViewBag.ChuaCoHoSo == true)
+{
+    <div class="alert alert-warning">Tài khoản của bạn chưa có hồ sơ sinh viên. Vui lòng liên hệ quản trị viên.</div>
+}
+else
+{
+    <form method="get" asp-action="Index" class="row g-2 mb-3">
+        <div class="col-auto">
+            <select name="trangThai" class="form-select">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ChoDuyet" selected="@(loc == "ChoDuyet")">Chờ duyệt</option>
+                <option value="DaDuyet" selected="@(loc == "DaDuyet")">Đã duyệt</option>
+                <option value="TuChoi" selected="@(loc == "TuChoi")">Từ chối</option>
+                <option value="DaHuy" selected="@(loc == "DaHuy")">Đã hủy</option>
+            </select>
+        </div>
+        <div class="col-auto"><button type="submit" class="btn btn-outline-secondary">Lọc</button></div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">Bạn chưa có đăng ký nào phù hợp.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Đề tài</th><th>Lĩnh vực</th><th>Năm học / HK</th><th>Ngày đăng ký</th>
+                        <th>Kết quả duyệt</th><th>GVHD hiện tại</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var x in Model)
+                    {
+                        <tr>
+                            <td><a asp-controller="DeTai" asp-action="Details" asp-route-id="@x.MaDeTai" class="text-decoration-none">@x.TenDeTai</a></td>
+                            <td>@x.TenLinhVuc</td>
+                            <td>@x.NamHoc / @x.HocKy</td>
+                            <td>@x.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge bg-@NhanTrangThai.MauDangKy(x.TrangThai)">@NhanTrangThai.DangKy(x.TrangThai)</span>
+                                @if (!string.IsNullOrEmpty(x.GhiChuDuyet)) { <br /><small class="text-muted">@x.GhiChuDuyet</small> }
+                                @if (x.TrangThai == TrangThaiDangKy.DaDuyet) { <br /><small>Tiến độ: @NhanTrangThai.TienDo(x.TrangThaiThucHien)</small> }
+                            </td>
+                            <td>
+                                @if (x.TrangThai != TrangThaiDangKy.DaDuyet) { <span class="text-muted">—</span> }
+                                else if (x.TenGiangVienHienTai != null) { <strong>@x.TenGiangVienHienTai</strong> }
+                                else if (x.TrangThaiThucHien == TienDoThucHien.HoanThanh) { <span class="text-success">Đã hoàn thành</span> }
+                                else { <span class="text-danger">Chưa được phân công</span> }
+                            </td>
+                            <td class="text-nowrap">
+                                <a asp-action="Details" asp-route-id="@x.MaDangKy" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                                @if (x.TrangThai == TrangThaiDangKy.ChoDuyet)
+                                {
+                                    <form asp-action="Huy" asp-route-id="@x.MaDangKy" method="post" class="d-inline"
+                                          onsubmit="return confirm('Hủy đăng ký này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Hủy</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}

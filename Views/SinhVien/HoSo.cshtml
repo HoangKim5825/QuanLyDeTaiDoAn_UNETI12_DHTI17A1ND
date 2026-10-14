@@ -1,0 +1,46 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - Sinh viên xem hồ sơ và cập nhật Email/Số điện thoại của chính mình
+*@
+@model QuanLyDeTaiDoAn.ViewModels.SinhVienHoSoViewModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<partial name="_ThongBao" />
+<h1 class="h3 mb-3">Thông tin cá nhân</h1>
+
+<div class="card card-body mb-3">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Mã sinh viên</dt><dd class="col-sm-9">@Model.MaSinhVien</dd>
+        <dt class="col-sm-3">Tên đăng nhập</dt><dd class="col-sm-9">@Model.TenDangNhap</dd>
+        <dt class="col-sm-3">Họ và tên</dt><dd class="col-sm-9">@Model.HoTen</dd>
+        <dt class="col-sm-3">Ngày sinh</dt><dd class="col-sm-9">@Model.NgaySinh.ToString("dd/MM/yyyy")</dd>
+        <dt class="col-sm-3">Lớp</dt><dd class="col-sm-9">@Model.Lop</dd>
+        <dt class="col-sm-3">Khoa</dt><dd class="col-sm-9">@Model.Khoa</dd>
+        <dt class="col-sm-3">Chuyên ngành</dt><dd class="col-sm-9">@Model.ChuyenNganh</dd>
+    </dl>
+</div>
+
+<form asp-action="HoSo" method="post" class="card card-body">
+    <h2 class="h5">Thông tin được phép chỉnh sửa</h2>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" type="email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="col-12 col-md-6">
+            <label asp-for="SoDienThoai" class="form-label"></label>
+            <input asp-for="SoDienThoai" type="tel" class="form-control" />
+            <span asp-validation-for="SoDienThoai" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="mt-3"><button type="submit" class="btn btn-primary">Lưu thay đổi</button></div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

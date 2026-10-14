@@ -1,0 +1,71 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - Chi tiết đăng ký của sinh viên: kết quả duyệt, GVHD hiện tại, lịch sử phân công
+*@
+@using QuanLyDeTaiDoAn.Helpers
+@model QuanLyDeTaiDoAn.ViewModels.DangKyChiTietViewModel
+@{
+    ViewData["Title"] = "Chi tiết đăng ký";
+}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <h1 class="h3 mb-0">Đăng ký #@Model.MaDangKy</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+        @if (Model.TrangThai == TrangThaiDangKy.ChoDuyet)
+        {
+            <form asp-action="Huy" asp-route-id="@Model.MaDangKy" method="post" onsubmit="return confirm('Hủy đăng ký này?');">
+                <button type="submit" class="btn btn-outline-danger">Hủy đăng ký</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card card-body mb-3">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Sinh viên</dt><dd class="col-sm-9">@Model.TenSinhVien</dd>
+        <dt class="col-sm-3">Đề tài</dt>
+        <dd class="col-sm-9"><a asp-controller="DeTai" asp-action="Details" asp-route-id="@Model.MaDeTai">@Model.TenDeTai</a></dd>
+        <dt class="col-sm-3">Lĩnh vực</dt><dd class="col-sm-9">@Model.TenLinhVuc</dd>
+        <dt class="col-sm-3">Năm học / Học kỳ</dt><dd class="col-sm-9">@Model.NamHoc / @Model.HocKy</dd>
+        <dt class="col-sm-3">Ngày đăng ký</dt><dd class="col-sm-9">@Model.NgayDangKy.ToString("dd/MM/yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Lý do đăng ký</dt><dd class="col-sm-9" style="white-space: pre-line">@Model.LyDoDangKy</dd>
+        <dt class="col-sm-3">Trạng thái</dt>
+        <dd class="col-sm-9"><span class="badge bg-@NhanTrangThai.MauDangKy(Model.TrangThai)">@NhanTrangThai.DangKy(Model.TrangThai)</span></dd>
+        @if (!string.IsNullOrEmpty(Model.GhiChuDuyet))
+        {
+            <dt class="col-sm-3">Ghi chú duyệt</dt><dd class="col-sm-9">@Model.GhiChuDuyet</dd>
+        }
+        @if (Model.TrangThai == TrangThaiDangKy.DaDuyet)
+        {
+            <dt class="col-sm-3">Tiến độ</dt><dd class="col-sm-9">@NhanTrangThai.TienDo(Model.TrangThaiThucHien)</dd>
+            <dt class="col-sm-3">GVHD hiện tại</dt>
+            <dd class="col-sm-9">
+                @if (Model.TenGiangVienHienTai != null) { <strong>@Model.TenGiangVienHienTai</strong> }
+                else if (Model.TrangThaiThucHien == TienDoThucHien.HoanThanh) { <span class="text-success">Đã hoàn thành</span> }
+                else { <span class="text-danger">Chưa được phân công</span> }
+            </dd>
+        }
+    </dl>
+</div>
+
+@if (Model.LichSu.Any())
+{
+    <h2 class="h5">Lịch sử phân công</h2>
+    <table class="table table-sm table-bordered">
+        <thead class="table-light"><tr><th>Giảng viên</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Ghi chú</th></tr></thead>
+        <tbody>
+            @foreach (var p in Model.LichSu)
+            {
+                <tr>
+                    <td>@(string.IsNullOrEmpty(p.HocVi) ? "" : p.HocVi + " ")@p.TenGiangVien</td>
+                    <td>@p.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                    <td>@(p.NgayKetThuc?.ToString("dd/MM/yyyy") ?? "đến nay")</td>
+                    <td>@NhanTrangThai.PhanCong(p.TrangThai)</td>
+                    <td>@p.GhiChu</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
