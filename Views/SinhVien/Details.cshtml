@@ -1,0 +1,43 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - View chi tiết sinh viên (Admin)
+*@
+@model QuanLyDeTaiDoAn.Models.SinhVien
+@{
+    ViewData["Title"] = Model.HoTen;
+}
+
+<partial name="_ThongBao" />
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <h1 class="h3 mb-0">@Model.HoTen</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Quay lại</a>
+        <a asp-action="Edit" asp-route-id="@Model.MaSinhVien" class="btn btn-primary">Sửa</a>
+    </div>
+</div>
+
+<div class="card card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Mã sinh viên</dt><dd class="col-sm-9">@Model.MaSinhVien</dd>
+        <dt class="col-sm-3">Tài khoản</dt><dd class="col-sm-9">@Model.TaiKhoan?.TenDangNhap</dd>
+        <dt class="col-sm-3">Ngày sinh</dt><dd class="col-sm-9">@Model.NgaySinh.ToString("dd/MM/yyyy")</dd>
+        <dt class="col-sm-3">Lớp</dt><dd class="col-sm-9">@Model.Lop</dd>
+        <dt class="col-sm-3">Khoa</dt><dd class="col-sm-9">@Model.Khoa</dd>
+        <dt class="col-sm-3">Chuyên ngành</dt><dd class="col-sm-9">@Model.ChuyenNganh</dd>
+        <dt class="col-sm-3">Email</dt><dd class="col-sm-9">@Model.Email</dd>
+        <dt class="col-sm-3">Số điện thoại</dt><dd class="col-sm-9">@Model.SoDienThoai</dd>
+        <dt class="col-sm-3">Trạng thái</dt>
+        <dd class="col-sm-9"><span class="badge @(Model.TrangThai ? "text-bg-success" : "text-bg-secondary")">@(Model.TrangThai ? "Hoạt động" : "Đã khóa")</span></dd>
+        <dt class="col-sm-3">Số lần đăng ký</dt>
+        <dd class="col-sm-9">
+            @ViewBag.SoDangKy
+            @if ((int)ViewBag.SoDangKy > 0)
+            {
+                <a asp-controller="PhanCongHuongDan" asp-action="DanhSachChoDuyet" asp-route-trangThai="TatCa"
+                   asp-route-tuKhoa="@Model.MaSinhVien" class="ms-2">Xem các đăng ký</a>
+            }
+        </dd>
+    </dl>
+</div>

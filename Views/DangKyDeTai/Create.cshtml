@@ -1,0 +1,62 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - Giao diện đăng ký đề tài, hiển thị rõ nguyên nhân khi không hợp lệ
+*@
+@model QuanLyDeTaiDoAn.ViewModels.DangKyDeTaiCreateViewModel
+@{
+    ViewData["Title"] = "Đăng ký đề tài";
+    bool coLoi = Model.Loi.Any();
+}
+
+<h1 class="h3 mb-3">Đăng ký đề tài</h1>
+
+@if (coLoi)
+{
+    <div class="alert alert-danger">
+        <strong>Không thể đăng ký đề tài này:</strong>
+        <ul class="mb-0">
+            @foreach (var l in Model.Loi) { <li>@l</li> }
+        </ul>
+    </div>
+}
+
+<div class="card card-body mb-3">
+    <h2 class="h5">@Model.TenDeTai</h2>
+    <dl class="row mb-2">
+        <dt class="col-sm-3">Sinh viên đăng ký</dt><dd class="col-sm-9">@Model.TenSinhVien</dd>
+        <dt class="col-sm-3">Lĩnh vực</dt><dd class="col-sm-9">@Model.TenLinhVuc</dd>
+        <dt class="col-sm-3">Năm học / Học kỳ</dt><dd class="col-sm-9">@Model.NamHoc / @Model.HocKy</dd>
+        <dt class="col-sm-3">Số sinh viên tối đa</dt><dd class="col-sm-9">@Model.SoSinhVienToiDa</dd>
+        <dt class="col-sm-3">Số chỗ còn</dt>
+        <dd class="col-sm-9"><span class="badge @(Model.SoChoCon <= 0 ? "text-bg-danger" : "text-bg-success")">@(Model.SoChoCon <= 0 ? "Hết chỗ" : Model.SoChoCon.ToString())</span></dd>
+    </dl>
+    @if (!string.IsNullOrWhiteSpace(Model.MoTa))
+    {
+        <h3 class="h6">Mô tả</h3>
+        <p style="white-space: pre-line">@Model.MoTa</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.YeuCau))
+    {
+        <h3 class="h6">Yêu cầu</h3>
+        <p class="mb-0" style="white-space: pre-line">@Model.YeuCau</p>
+    }
+</div>
+
+<form asp-action="Create" method="post" class="card card-body">
+    <input type="hidden" asp-for="MaDeTai" />
+    <div class="mb-3">
+        <label asp-for="LyDoDangKy" class="form-label"></label>
+        <textarea asp-for="LyDoDangKy" class="form-control" rows="4" disabled="@coLoi"></textarea>
+        <span asp-validation-for="LyDoDangKy" class="text-danger"></span>
+    </div>
+    <div class="form-text mb-3">Ngày đăng ký do hệ thống ghi nhận tự động.</div>
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success" disabled="@coLoi">Gửi đăng ký</button>
+        <a asp-controller="DeTai" asp-action="Details" asp-route-id="@Model.MaDeTai" class="btn btn-outline-secondary">Quay lại đề tài</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

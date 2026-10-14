@@ -1,0 +1,117 @@
+@*
+    Họ và tên: <ĐIỀN TÊN>
+    Mã sinh viên: <ĐIỀN MÃ SV>
+    Nội dung thực hiện: Module 3 - View danh sách sinh viên (tìm kiếm, lọc, phân trang)
+*@
+@model QuanLyDeTaiDoAn.ViewModels.SinhVienFilterViewModel
+@{
+    ViewData["Title"] = "Quản lý sinh viên";
+    var kq = Model.KetQua;
+    bool dangLoc = !string.IsNullOrWhiteSpace(Model.Keyword) || !string.IsNullOrEmpty(Model.Lop) || Model.TrangThai.HasValue;
+    int stt = (kq.Page - 1) * kq.PageSize + 1;
+}
+
+<partial name="_ThongBao" />
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Quản lý sinh viên</h1>
+    <a asp-action="Create" class="btn btn-primary">Thêm sinh viên</a>
+</div>
+
+<form asp-action="Index" method="get" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-12 col-lg-5">
+            <label class="form-label">Từ khóa</label>
+            <input name="Keyword" value="@Model.Keyword" class="form-control" placeholder="Mã SV, họ tên hoặc email" />
+        </div>
+        <div class="col-6 col-lg-3">
+            <label class="form-label">Lớp</label>
+            <select name="Lop" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var l in Model.DanhSachLop)
+                {
+                    <option value="@l" selected="@(Model.Lop == l)">@l</option>
+                }
+            </select>
+        </div>
+        <div class="col-6 col-lg-2">
+            <label class="form-label">Trạng thái</label>
+            <select name="TrangThai" class="form-select">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@(Model.TrangThai == true)">Hoạt động</option>
+                <option value="false" selected="@(Model.TrangThai == false)">Đã khóa</option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-2 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-primary">Tìm</button>
+            @if (dangLoc) { <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a> }
+        </div>
+    </div>
+</form>
+
+@if (kq.TotalItems == 0)
+{
+    <div class="alert alert-info">Không tìm thấy sinh viên nào phù hợp.</div>
+}
+else
+{
+    <p class="text-muted mb-2">Có @kq.TotalItems sinh viên (trang @kq.Page/@kq.TotalPages)</p>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>STT</th><th>Mã SV</th><th>Họ và tên</th><th>Lớp</th><th>Email</th>
+                    <th>Tài khoản</th><th class="text-center">Số đăng ký</th><th>Trạng thái</th><th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in kq.Items)
+                {
+                    <tr>
+                        <td>@(stt++)</td>
+                        <td>@s.MaSinhVien</td>
+                        <td><a asp-action="Details" asp-route-id="@s.MaSinhVien" class="fw-semibold text-decoration-none">@s.HoTen</a></td>
+                        <td>@s.Lop</td>
+                        <td>@s.Email</td>
+                        <td>@s.TenDangNhap</td>
+                        <td class="text-center">@s.SoDangKy</td>
+                        <td>
+                            <span class="badge @(s.TrangThai ? "text-bg-success" : "text-bg-secondary")">@(s.TrangThai ? "Hoạt động" : "Đã khóa")</span>
+                        </td>
+                        <td class="text-nowrap">
+                            <a asp-action="Details" asp-route-id="@s.MaSinhVien" class="btn btn-sm btn-outline-primary">Chi tiết</a>
+                            <a asp-action="Edit" asp-route-id="@s.MaSinhVien" class="btn btn-sm btn-outline-secondary">Sửa</a>
+                            <form asp-action="Delete" asp-route-id="@s.MaSinhVien" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa sinh viên này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (kq.TotalPages > 1)
+    {
+        <nav>
+            <ul class="pagination justify-content-center flex-wrap">
+                <li class="page-item @(kq.HasPrevious ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-Page="@(kq.Page - 1)" asp-route-Keyword="@Model.Keyword"
+                       asp-route-Lop="@Model.Lop" asp-route-TrangThai="@Model.TrangThai">Trước</a>
+                </li>
+                @for (int p = 1; p <= kq.TotalPages; p++)
+                {
+                    <li class="page-item @(p == kq.Page ? "active" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-Page="@p" asp-route-Keyword="@Model.Keyword"
+                           asp-route-Lop="@Model.Lop" asp-route-TrangThai="@Model.TrangThai">@p</a>
+                    </li>
+                }
+                <li class="page-item @(kq.HasNext ? "" : "disabled")">
+                    <a class="page-link" asp-action="Index" asp-route-Page="@(kq.Page + 1)" asp-route-Keyword="@Model.Keyword"
+                       asp-route-Lop="@Model.Lop" asp-route-TrangThai="@Model.TrangThai">Sau</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}

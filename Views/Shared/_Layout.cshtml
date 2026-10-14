@@ -7,6 +7,7 @@
 }
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,13 +17,15 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-controller="Home"
+                   asp-action="Index">QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -47,71 +50,90 @@
                                 <a class="nav-link text-dark" asp-controller="GiangVien" asp-action="Index">Giảng viên</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="SinhVien" asp-action="Index">Sinh viên</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="TaiKhoan" asp-action="Index">Tài khoản</a>
                             </li>
 
                             @* ===== Module 4 ===== *@
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
                                     Duyệt &amp; phân công
                                 </a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="PhanCongHuongDan" asp-action="DanhSachChoDuyet">Đăng ký chờ duyệt</a></li>
-                                    <li><a class="dropdown-item" asp-controller="PhanCongHuongDan" asp-action="DanhSachChoDuyet" asp-route-trangThai="DaDuyet">Đã duyệt / Phân công GVHD</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="ThongKe" asp-action="Dashboard">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="ThongKe" asp-action="Index">Thống kê</a>
-                            </li>
-                        }
-                        @if (daDangNhap && !laAdmin)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="GVHDCuaToi" asp-action="Index">GVHD của tôi</a>
-                            </li>
-                        }
-                    </ul>
+                                    <li><a class="dropdown-item" asp-controller="PhanCongHuongDan"
+                                               asp-action="DanhSachChoDuyet">Đăng ký chờ duyệt</a></li>
+                                        <li><a class="dropdown-item" asp-controller="PhanCongHuongDan"
+                                               asp-action="DanhSachChoDuyet" asp-route-trangThai="DaDuyet">Đã duyệt / Phân công
+                                            GVHD</a></li>
+                                        </ul>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="ThongKe" asp-action="Dashboard">Dashboard</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="ThongKe" asp-action="Index">Thống kê</a>
+                                    </li>
+                                }
+                                @if (daDangNhap && !laAdmin)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="GVHDCuaToi" asp-action="Index">GVHD của
+                                            tôi</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link text-dark" asp-controller="DangKyDeTai" asp-action="Index">Đăng ký của
+                                                tôi</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link text-dark" asp-controller="SinhVien" asp-action="HoSo">Thông tin cá
+                                                    nhân</a>
+                                                </li>
+                                            }
+                                        </ul>
 
-                    <ul class="navbar-nav">
-                        @if (daDangNhap)
-                        {
-                            <li class="nav-item">
-                                <span class="navbar-text me-2">Xin chào, <strong>@hoTen</strong> (@(laAdmin ? "Admin" : "Sinh viên"))</span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
-                                </form>
-                            </li>
-                        }
+                                        <ul class="navbar-nav">
+                                            @if (daDangNhap)
+                                            {
+                                                <li class="nav-item">
+                                                    <span class="navbar-text me-2">Xin chào, <strong>@hoTen</strong> (@(laAdmin ? "Admin" :
+                                                                      "Sinh viên"))</span>
+                                                    </li>
+                                                    <li class="nav-item">
+                                                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-secondary btn-sm">Đăng xuất</button>
+                                                        </form>
+                                                    </li>
+                                                }
                         else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Đăng nhập</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+                                                {
+                                                    <li class="nav-item">
+                                                        <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </nav>
+                            </header>
+                            <div class="container">
+                                <main role="main" class="pb-3">
+                                    @RenderBody()
+                                </main>
+                            </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+                            <footer class="border-top footer text-muted">
+                                <div class="container">
+                                    &copy; 2026 - QuanLyDeTaiDoAn_UNETI12_DHTI17A1ND - <a asp-area="" asp-controller="Home"
+                                                                                          asp-action="Privacy">Privacy</a>
+                                </div>
+                            </footer>
+                            <script src="~/lib/jquery/dist/jquery.min.js"></script>
+                            <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+                            <script src="~/js/site.js" asp-append-version="true"></script>
+                            @await RenderSectionAsync("Scripts", required: false)
+                        </body>
+
+                    </html>
