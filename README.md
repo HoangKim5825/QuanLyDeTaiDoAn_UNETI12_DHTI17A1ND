@@ -11,7 +11,7 @@ Bài tập lớn môn Thực hành lập trình .NET – Đề tài 12 – Nhóm
 |---|---|---|---|
 | 1 | Nguyễn Minh Đức | 23203100078 | Module 1: Tài khoản, đăng nhập, phân quyền, lĩnh vực |
 | 2 | Nguyễn Quang Huy | 23203100080 | Module 2: Giảng viên, đề tài, tìm kiếm/lọc/sắp xếp/phân trang |
-| 3 | [Thành Hưng] | [23203100011] | Module 3: Sinh viên, đăng ký đề tài |
+| 3 | Thành Hưng | 23203100011 | Module 3: Sinh viên, đăng ký đề tài |
 | 4 | Hoàng Kim | 23203100056 | Module 4: Duyệt đăng ký, phân công GVHD, Dashboard, thống kê |
 
 ## Chức năng chính
